@@ -13,7 +13,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4.1.0
         with:
-          node-version: 22.11.0
+          node-version: '22.11.0'
 
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
@@ -27,13 +27,13 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
             # 设置 PATH 包含 npm 全局安装的位置
-            export PATH="$PATH:$HOME/.npm-global/bin:/usr/local/bin"
+            export PATH="$PATH:$HOME/.npm-global/bin:/usr/local/bin:$HOME/.nvm/versions/node/$(node -v)/bin"
             
             echo "Connection successful"
             cd www/bsvgo
             
             # 使用完整路径执行 pm2 命令
-            $(npm bin)/pm2 stop ecosystem.config.cjs || true
+            pm2 stop ecosystem.config.cjs || true
             
             rm -rf node_modules
             rm -rf .next
@@ -47,7 +47,7 @@ jobs:
             npm run build
             
             # 使用完整路径启动 pm2
-            $(npm bin)/pm2 start ecosystem.config.cjs
+            pm2 start ecosystem.config.cjs
             echo "pm2 start success"
             # echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
             # echo "set DATABASE_URL"
