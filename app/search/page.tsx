@@ -20,11 +20,27 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q } = await searchParams;
   const query = q || '';
-  
-  const documents = query ? await searchDocuments(query) : [];
 
-  return <ModernBlogLayout
-    documents={documents as any}
-    searchQuery={query}
-  />;
+  // 在构建时跳过数据库查询
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+    return <ModernBlogLayout
+      documents={[]}
+      searchQuery={query}
+    />;
+  }
+
+  try {
+    const documents = query ? await searchDocuments(query) : [];
+
+    return <ModernBlogLayout
+      documents={documents as any}
+      searchQuery={query}
+    />;
+  } catch (error) {
+    console.error('搜索失败:', error);
+    return <ModernBlogLayout
+      documents={[]}
+      searchQuery={query}
+    />;
+  }
 }

@@ -50,18 +50,35 @@ interface DocumentPageProps {
 
 export async function generateMetadata({ params }: DocumentPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const document = await getDocumentBySlug(slug);
-  
-  if (!document) {
+
+  // 在构建时跳过数据库查询
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
     return {
-      title: '文档未找到',
+      title: `${slug} - Markdown 编辑器`,
+      description: `查看文档: ${slug}`,
     };
   }
 
-  return {
-    title: `${document.title} - Markdown 编辑器`,
-    description: document.content.substring(0, 160) || `查看文档: ${document.title}`,
-  };
+  try {
+    const document = await getDocumentBySlug(slug);
+
+    if (!document) {
+      return {
+        title: '文档未找到',
+      };
+    }
+
+    return {
+      title: `${document.title} - Markdown 编辑器`,
+      description: document.content.substring(0, 160) || `查看文档: ${document.title}`,
+    };
+  } catch (error) {
+    console.error('获取文档元数据失败:', error);
+    return {
+      title: `${slug} - Markdown 编辑器`,
+      description: `查看文档: ${slug}`,
+    };
+  }
 }
 
 export default async function DocumentPage({ params }: DocumentPageProps) {

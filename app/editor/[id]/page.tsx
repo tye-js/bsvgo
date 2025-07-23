@@ -14,18 +14,35 @@ interface EditDocumentPageProps {
 
 export async function generateMetadata({ params }: EditDocumentPageProps): Promise<Metadata> {
   const { id } = await params;
-  const document = await getDocumentById(id);
-  
-  if (!document) {
+
+  // 在构建时跳过数据库查询
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
     return {
-      title: '文档未找到',
+      title: `编辑文档 - Markdown 编辑器`,
+      description: `编辑文档: ${id}`,
     };
   }
 
-  return {
-    title: `编辑 ${document.title} - Markdown 编辑器`,
-    description: `编辑文档: ${document.title}`,
-  };
+  try {
+    const document = await getDocumentById(id);
+
+    if (!document) {
+      return {
+        title: '文档未找到',
+      };
+    }
+
+    return {
+      title: `编辑 ${document.title} - Markdown 编辑器`,
+      description: `编辑文档: ${document.title}`,
+    };
+  } catch (error) {
+    console.error('获取编辑文档元数据失败:', error);
+    return {
+      title: `编辑文档 - Markdown 编辑器`,
+      description: `编辑文档: ${id}`,
+    };
+  }
 }
 
 export default async function EditDocumentPage({ params }: EditDocumentPageProps) {
