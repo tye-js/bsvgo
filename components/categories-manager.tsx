@@ -248,7 +248,7 @@ export function CategoriesManager({ initialCategories }: CategoriesManagerProps)
                 <div className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: category.color || '#6b7280' }}
                   />
                   <h3 className="font-semibold">{category.name}</h3>
                 </div>

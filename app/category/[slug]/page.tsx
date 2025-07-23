@@ -57,7 +57,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         </div>
       </div>
       
-      <ModernBlogLayout documents={documents} categories={allCategories} />
+      <ModernBlogLayout
+        documents={documents as any}
+        categories={allCategories}
+      />
     </div>
   );
 }

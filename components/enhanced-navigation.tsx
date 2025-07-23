@@ -42,7 +42,7 @@ export function EnhancedNavigation({ onSearch, categories = [] }: EnhancedNaviga
 
   // 图标映射
   const getIconForCategory = (slug: string) => {
-    const iconMap: Record<string, any> = {
+    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
       'news': Newspaper,
       'tech-analysis': Code,
       'app-trading': TrendingUp,
@@ -148,15 +148,7 @@ export function EnhancedNavigation({ onSearch, categories = [] }: EnhancedNaviga
                 </Button>
 
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                  {session.user.avatar ? (
-                    <img
-                      src={session.user.avatar}
-                      alt={session.user.name}
-                      className="w-6 h-6 rounded-full"
-                    />
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
+                  <User className="w-4 h-4" />
                   <span>欢迎, {session.user.name}</span>
                 </div>
                 {session.user.isAdmin && (
@@ -245,15 +237,7 @@ export function EnhancedNavigation({ onSearch, categories = [] }: EnhancedNaviga
               {session ? (
                 <div className="space-y-2">
                   <div className="px-4 py-2 text-sm text-gray-600 flex items-center space-x-2">
-                    {session.user.avatar ? (
-                      <img
-                        src={session.user.avatar}
-                        alt={session.user.name}
-                        className="w-6 h-6 rounded-full"
-                      />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
+                    <User className="w-4 h-4" />
                     <span>欢迎, {session.user.name}</span>
                   </div>
                   {session.user.isAdmin && (

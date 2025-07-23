@@ -232,9 +232,9 @@ export function TagsManager({ initialTags }: TagsManagerProps) {
               <div className="flex items-center gap-2 mb-2">
                 <Badge
                   style={{
-                    backgroundColor: `${tag.color}20`,
-                    color: tag.color,
-                    border: `1px solid ${tag.color}40`,
+                    backgroundColor: `${tag.color || '#6b7280'}20`,
+                    color: tag.color || '#6b7280',
+                    border: `1px solid ${tag.color || '#6b7280'}40`,
                   }}
                 >
                   <TagIcon className="w-3 h-3 mr-1" />

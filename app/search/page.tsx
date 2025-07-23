@@ -23,5 +23,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   
   const documents = query ? await searchDocuments(query) : [];
 
-  return <ModernBlogLayout documents={documents} searchQuery={query} />;
+  return <ModernBlogLayout
+    documents={documents as any}
+    searchQuery={query}
+  />;
 }

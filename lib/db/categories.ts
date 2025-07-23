@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db, categories, type Category, type NewCategory } from '@/db';
 
 export async function getAllCategories(): Promise<Category[]> {

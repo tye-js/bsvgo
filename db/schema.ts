@@ -62,7 +62,7 @@ export const comments = pgTable('comments', {
   content: text('content').notNull(),
   authorId: uuid('author_id').references(() => users.id).notNull(),
   documentId: uuid('document_id').references(() => documents.id).notNull(),
-  parentId: uuid('parent_id').references(() => comments.id), // 支持回复
+  parentId: uuid('parent_id'), // 支持回复，稍后添加外键约束
   published: boolean('published').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
@@ -17,11 +18,11 @@ interface FavoriteItem {
     id: string;
     title: string;
     slug: string;
-    excerpt?: string;
-    featuredImage?: string;
+    excerpt?: string | null;
+    featuredImage?: string | null;
     createdAt: Date;
     viewCount: number;
-  };
+  } | null;
 }
 
 interface FavoritesListProps {
@@ -95,16 +96,21 @@ export function FavoritesList({ favorites: initialFavorites }: FavoritesListProp
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {favorites.map((favorite) => (
-        <Card key={favorite.id} className="group hover:shadow-lg transition-shadow">
-          <CardContent className="p-0">
-            {/* 特色图片 */}
-            {favorite.document.featuredImage && (
-              <div className="aspect-video overflow-hidden rounded-t-lg">
-                <img
+      {favorites.map((favorite) => {
+        if (!favorite.document) return null;
+
+        return (
+          <Card key={favorite.id} className="group hover:shadow-lg transition-shadow">
+            <CardContent className="p-0">
+              {/* 特色图片 */}
+              {favorite.document.featuredImage && (
+              <div className="aspect-video overflow-hidden rounded-t-lg relative">
+                <Image
                   src={favorite.document.featuredImage}
                   alt={favorite.document.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>
             )}
@@ -167,7 +173,8 @@ export function FavoritesList({ favorites: initialFavorites }: FavoritesListProp
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }

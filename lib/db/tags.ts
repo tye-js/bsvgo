@@ -1,5 +1,5 @@
 import { eq, inArray } from 'drizzle-orm';
-import { db, tags, documentTags, type Tag, type NewTag, type DocumentTag, type NewDocumentTag } from '@/db';
+import { db, tags, documentTags, type Tag, type NewTag, type NewDocumentTag } from '@/db';
 
 export async function getAllTags(): Promise<Tag[]> {
   try {

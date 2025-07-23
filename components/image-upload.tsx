@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
@@ -78,10 +79,12 @@ export function ImageUpload({ value, onChange, onRemove, disabled }: ImageUpload
       {value ? (
         <div className="relative">
           <div className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
-            <img
+            <Image
               src={value}
               alt="上传的图片"
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
           <Button

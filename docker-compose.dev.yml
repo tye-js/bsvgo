@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库 (开发环境)
+  postgres:
+    image: postgres:16-alpine
+    container_name: bsvgo-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bsvgo_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-bsvgo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bsvgo-dev-network
+
+
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  bsvgo-dev-network:
+    driver: bridge

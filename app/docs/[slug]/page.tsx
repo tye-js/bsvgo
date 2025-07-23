@@ -1,6 +1,35 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+
+// 扩展的文档类型，包含关联数据
+type DocumentWithRelations = {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string | null;
+  slug: string;
+  keywords: string | null;
+  featuredImage: string | null;
+  authorId: string;
+  categoryId: string | null;
+  published: boolean;
+  viewCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  author?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+  };
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+  };
+};
 import { getDocumentBySlug, incrementViewCount } from '@/lib/db/documents';
 import { getTagsByDocumentId } from '@/lib/db/tags';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
@@ -37,7 +66,7 @@ export async function generateMetadata({ params }: DocumentPageProps): Promise<M
 
 export default async function DocumentPage({ params }: DocumentPageProps) {
   const { slug } = await params;
-  const document = await getDocumentBySlug(slug);
+  const document = await getDocumentBySlug(slug) as DocumentWithRelations;
 
   if (!document) {
     notFound();

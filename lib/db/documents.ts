@@ -1,9 +1,9 @@
 import { eq, desc, like, or, sql } from 'drizzle-orm';
-import { db, documents, users, categories, tags, documentTags, type Document, type NewDocument } from '@/db';
+import { db, documents, users, categories, type Document, type NewDocument } from '@/db';
 import { CreateDocumentInput, UpdateDocumentInput } from '@/lib/validations';
 import { addTagsToDocument } from './tags';
 
-export async function getAllDocuments(): Promise<any[]> {
+export async function getAllDocuments(): Promise<Document[]> {
   try {
     return await db
       .select({
@@ -43,16 +43,21 @@ export async function getAllDocuments(): Promise<any[]> {
   }
 }
 
-export async function getPublishedDocuments(): Promise<Document[]> {
+export async function getPublishedDocuments() {
   try {
     return await db
       .select({
         id: documents.id,
         title: documents.title,
         content: documents.content,
+        excerpt: documents.excerpt,
         slug: documents.slug,
+        keywords: documents.keywords,
+        featuredImage: documents.featuredImage,
         authorId: documents.authorId,
+        categoryId: documents.categoryId,
         published: documents.published,
+        viewCount: documents.viewCount,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         author: {
@@ -60,9 +65,16 @@ export async function getPublishedDocuments(): Promise<Document[]> {
           name: users.name,
           email: users.email,
         },
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          color: categories.color,
+        },
       })
       .from(documents)
       .leftJoin(users, eq(documents.authorId, users.id))
+      .leftJoin(categories, eq(documents.categoryId, categories.id))
       .where(eq(documents.published, true))
       .orderBy(desc(documents.updatedAt));
   } catch (error) {
@@ -71,7 +83,7 @@ export async function getPublishedDocuments(): Promise<Document[]> {
   }
 }
 
-export async function getDocumentBySlug(slug: string): Promise<any | null> {
+export async function getDocumentBySlug(slug: string) {
   try {
     const result = await db
       .select({
@@ -124,7 +136,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   }
 }
 
-export async function searchDocuments(query: string): Promise<any[]> {
+export async function searchDocuments(query: string): Promise<Document[]> {
   try {
     const searchTerm = `%${query}%`;
     return await db
@@ -173,7 +185,7 @@ export async function searchDocuments(query: string): Promise<any[]> {
   }
 }
 
-export async function getDocumentsByCategory(categorySlug: string): Promise<any[]> {
+export async function getDocumentsByCategory(categorySlug: string): Promise<Document[]> {
   try {
     return await db
       .select({

@@ -1,53 +1,119 @@
-name: Deploy to Ubuntu Server
+name: Deploy to Ubuntu Server with Docker
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4.1.0
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: '22.11.0'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 加载 NVM 环境
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            
-            # 设置 PATH 包含 npm 全局安装的位置
-            export PATH="$PATH:$HOME/.npm-global/bin:/usr/local/bin:$HOME/.nvm/versions/node/$(node -v)/bin"
-            
-            echo "Connection successful"
-            cd www/bsvgo
-            
-            # 使用完整路径执行 pm2 命令
-            pm2 stop ecosystem.config.cjs || true
-            
-            rm -rf node_modules
-            rm -rf .next
-            echo "remove success"
-            
-            git pull origin main
-            echo "git pull successful"
-            
-            # 安装依赖和构建
-            npm install
-            npm run build
-            
-            # 使用完整路径启动 pm2
-            pm2 start ecosystem.config.cjs
-            echo "pm2 start success"
-            # echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-            # echo "set DATABASE_URL"
+            echo "Starting deployment..."
+
+            # 进入项目目录
+            cd /home/${{ secrets.SERVER_USER }}/bsvgo || {
+              echo "Project directory not found, creating..."
+              mkdir -p /home/${{ secrets.SERVER_USER }}/bsvgo
+              cd /home/${{ secrets.SERVER_USER }}/bsvgo
+            }
+
+            # 拉取最新代码
+            if [ -d ".git" ]; then
+              echo "Pulling latest code..."
+              git pull origin main
+            else
+              echo "Cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git .
+            fi
+
+            # 登录到 GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 拉取最新镜像
+            echo "Pulling latest Docker image..."
+            docker pull ${{ needs.build-and-push.outputs.image-tag }}
+
+            # 更新 docker-compose.yml 中的镜像标签
+            sed -i "s|image: .*|image: ${{ needs.build-and-push.outputs.image-tag }}|g" docker-compose.yml || true
+
+            # 停止现有服务
+            echo "Stopping existing services..."
+            docker-compose down || true
+
+            # 清理未使用的镜像
+            docker image prune -f || true
+
+            # 启动服务
+            echo "Starting services..."
+            docker-compose up -d
+
+            # 等待服务启动
+            echo "Waiting for services to start..."
+            sleep 30
+
+            # 检查服务状态
+            echo "Checking service status..."
+            docker-compose ps
+
+            # 检查应用健康状态
+            echo "Checking application health..."
+            curl -f http://localhost:3000/api/health || echo "Health check failed"
+
+            echo "Deployment completed!"

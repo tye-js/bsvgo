@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { EnhancedNavigation } from '@/components/enhanced-navigation';
 import { formatDate } from '@/lib/utils';
@@ -101,7 +102,7 @@ export function ModernBlogLayout({ documents, searchQuery, categories = [] }: Mo
           {searchQuery && (
             <div className="mb-8">
               <p className="text-gray-600 dark:text-gray-300">
-                搜索 "{searchQuery}" 的结果：找到 {filteredDocuments.length} 篇文章
+                搜索 &ldquo;{searchQuery}&rdquo; 的结果：找到 {filteredDocuments.length} 篇文章
               </p>
             </div>
           )}
@@ -127,11 +128,13 @@ export function ModernBlogLayout({ documents, searchQuery, categories = [] }: Mo
               >
                 {/* 特色图片 */}
                 {doc.featuredImage && (
-                  <div className="aspect-video overflow-hidden">
-                    <img
+                  <div className="aspect-video overflow-hidden relative">
+                    <Image
                       src={doc.featuredImage}
                       alt={doc.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                 )}

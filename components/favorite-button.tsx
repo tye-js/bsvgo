@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
@@ -29,7 +29,7 @@ export function FavoriteButton({
     checkFavoriteStatus();
   }, [session?.user?.id, documentId]);
 
-  const checkFavoriteStatus = async () => {
+  const checkFavoriteStatus = useCallback(async () => {
     try {
       const response = await fetch(`/api/favorites/check?documentId=${documentId}`);
       if (response.ok) {
@@ -40,7 +40,7 @@ export function FavoriteButton({
     } catch (error) {
       console.error('检查收藏状态失败:', error);
     }
-  };
+  }, [documentId]);
 
   const handleToggleFavorite = async () => {
     if (!session) {

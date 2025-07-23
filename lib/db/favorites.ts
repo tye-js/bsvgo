@@ -1,6 +1,6 @@
 import { eq, and, count } from 'drizzle-orm';
 import { db } from '@/db';
-import { favorites, documents, users, type Favorite, type NewFavorite } from '@/db/schema';
+import { favorites, documents, type Favorite, type NewFavorite } from '@/db/schema';
 
 export async function getFavoritesByUserId(userId: string) {
   try {

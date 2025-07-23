@@ -5,8 +5,8 @@ export interface CommentWithAuthor extends Comment {
   author: {
     id: string;
     name: string;
-    avatar?: string;
-  };
+    avatar?: string | null;
+  } | null;
   replies?: CommentWithAuthor[];
 }
 

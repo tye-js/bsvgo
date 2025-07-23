@@ -9,5 +9,8 @@ export default async function Home() {
     getAllCategories()
   ]);
 
-  return <ModernBlogLayout documents={documents} categories={categories} />;
+  return <ModernBlogLayout
+    documents={documents as any}
+    categories={categories}
+  />;
 }

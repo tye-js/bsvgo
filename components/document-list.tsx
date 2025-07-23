@@ -3,7 +3,7 @@ import { Document } from '@/db';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate } from '@/lib/utils';
-import { FileText, Plus, Edit, Trash2 } from 'lucide-react';
+import { FileText, Plus, Edit } from 'lucide-react';
 import { DeleteDocumentButton } from '@/components/delete-document-button';
 
 interface DocumentListProps {

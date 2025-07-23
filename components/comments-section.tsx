@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -41,12 +42,7 @@ export function CommentsSection({ documentId }: CommentsSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 获取评论
-  useEffect(() => {
-    fetchComments();
-  }, [documentId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/comments?documentId=${documentId}`);
@@ -59,7 +55,12 @@ export function CommentsSection({ documentId }: CommentsSectionProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [documentId]);
+
+  // 获取评论
+  useEffect(() => {
+    fetchComments();
+  }, [documentId, fetchComments]);
 
   const handleSubmitComment = async () => {
     if (!session) {
@@ -188,11 +189,15 @@ export function CommentsSection({ documentId }: CommentsSectionProps) {
       <div className="flex space-x-3">
         <div className="flex-shrink-0">
           {comment.author.avatar ? (
-            <img
-              src={comment.author.avatar}
-              alt={comment.author.name}
-              className="w-8 h-8 rounded-full"
-            />
+            <div className="relative w-8 h-8 rounded-full overflow-hidden">
+              <Image
+                src={comment.author.avatar}
+                alt={comment.author.name}
+                fill
+                className="object-cover"
+                sizes="32px"
+              />
+            </div>
           ) : (
             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-gray-500" />

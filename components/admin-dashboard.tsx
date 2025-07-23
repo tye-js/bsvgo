@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { formatDate } from '@/lib/utils';
 import { DeleteDocumentButton } from '@/components/delete-document-button';
 import {
@@ -16,16 +15,9 @@ import {
   Calendar,
   User,
   FileText,
-  Settings,
-  LogOut,
-  Home,
-  BarChart3,
-  Users,
   BookOpen,
   CheckCircle,
-  XCircle,
-  Folder,
-  Tag
+  XCircle
 } from 'lucide-react';
 
 interface Document {

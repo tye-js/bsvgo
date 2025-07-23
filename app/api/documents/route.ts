@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createDocument, getAllDocuments } from '@/lib/db/documents';
 import { createDocumentSchema } from '@/lib/validations';
 import { ZodError } from 'zod';
-import { ZodError } from 'zod';
 
 export async function GET() {
   try {
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // 处理 Zod 验证错误
     if (error instanceof ZodError) {
-      const fieldErrors = error.errors.map(err => {
+      const fieldErrors = error.issues.map(err => {
         const field = err.path.join('.');
         const fieldNames: Record<string, string> = {
           'title': '标题',
