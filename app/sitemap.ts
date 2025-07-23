@@ -4,12 +4,37 @@ import { getAllCategories } from '@/lib/db/categories';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  
-  // 获取所有已发布的文档
-  const documents = await getPublishedDocuments();
-  
-  // 获取所有分类
-  const categories = await getAllCategories();
+
+  // 在构建时跳过数据库查询
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+    return [
+      {
+        url: baseUrl,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 1,
+      },
+      {
+        url: `${baseUrl}/auth/signin`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.3,
+      },
+      {
+        url: `${baseUrl}/auth/signup`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.3,
+      },
+    ];
+  }
+
+  try {
+    // 获取所有已发布的文档
+    const documents = await getPublishedDocuments();
+
+    // 获取所有分类
+    const categories = await getAllCategories();
   
   // 静态页面
   const staticPages = [
@@ -49,5 +74,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
   
-  return [...staticPages, ...documentPages, ...categoryPages];
+    return [...staticPages, ...documentPages, ...categoryPages];
+  } catch (error) {
+    console.error('获取 sitemap 数据失败:', error);
+    // 如果数据库查询失败，返回基本的静态页面
+    return [
+      {
+        url: baseUrl,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 1,
+      },
+      {
+        url: `${baseUrl}/auth/signin`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.3,
+      },
+      {
+        url: `${baseUrl}/auth/signup`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.3,
+      },
+    ];
+  }
 }

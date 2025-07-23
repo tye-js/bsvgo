@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     const user = await createUser(validatedData);
     
     // 返回用户信息（不包含密码）
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
     
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {

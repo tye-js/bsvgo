@@ -38,6 +38,7 @@ export default function SignInPage() {
         }
       }
     } catch (error) {
+      console.error('登录错误:', error);
       setError('登录失败，请重试');
     } finally {
       setIsLoading(false);

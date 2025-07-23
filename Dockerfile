@@ -13,10 +13,11 @@ COPY package*.json ./
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retries 3
+    npm config set fetch-retries 3 && \
+    npm config set audit false
 
 # 安装生产依赖
-RUN npm ci --only=production --verbose
+RUN npm ci --only=production --no-audit --verbose
 
 # 构建阶段
 FROM base AS builder
@@ -27,17 +28,18 @@ COPY package*.json ./
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retries 3
+    npm config set fetch-retries 3 && \
+    npm config set audit false
 
 # 安装所有依赖（包括开发依赖）
-RUN npm ci --verbose
+RUN npm ci --no-audit --verbose
 
 # 复制源代码
 COPY . .
 
 # 设置环境变量
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
 # 构建应用
 RUN npm run build
@@ -45,8 +47,8 @@ RUN npm run build
 # 生产阶段
 FROM base AS runner
 # 设置环境变量
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 创建非 root 用户
 RUN addgroup --system --gid 1001 nodejs
@@ -73,8 +75,8 @@ USER nextjs
 EXPOSE 3000
 
 # 设置环境变量
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 使用入口脚本启动应用
 ENTRYPOINT ["./docker-entrypoint.sh"]
