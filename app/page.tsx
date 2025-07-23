@@ -1,9 +1,13 @@
 
+import { getPublishedDocuments } from '@/lib/db/documents';
+import { getAllCategories } from '@/lib/db/categories';
+import { ModernBlogLayout } from '@/components/modern-blog-layout';
 
-export default function Home() {
-  return (
-    <div className="h-screen flex justify-center items-center">
-      <div className="text-center text-2xl text-blue-600">make bsv go! go! go!</div>
-    </div>
-  );
+export default async function Home() {
+  const [documents, categories] = await Promise.all([
+    getPublishedDocuments(),
+    getAllCategories()
+  ]);
+
+  return <ModernBlogLayout documents={documents} categories={categories} />;
 }

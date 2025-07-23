@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine  # 从 Docker Hub 拉取
+    container_name: bsvgo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bsvgo_db
+      POSTGRES_USER: bsvgo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - bsvgo-network
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bsvgo
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=dev
+      - DATABASE_URL=postgresql://bsvgo:${POSTGRES_PASSWORD}@localhost:5435/bsvgo_db
+      - POSTGRES_USER=bsvgo
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres123}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:alpine  # 从 Docker Hub 拉取
+    container_name: bsvgo-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - bsvgo-network
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+
+networks:
+  bsvgo-network:
+    driver: bridge
