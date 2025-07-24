@@ -88,11 +88,8 @@ jobs:
 
             # 拉取最新镜像
             echo "Pulling latest Docker image..."
-            # 从 image-tag 输出中提取你想要部署的特定标签
             # image-tag 可能会是类似 "ghcr.io/tye-js/bsvgo:main,ghcr.io/tye-js/bsvgo:latest,ghcr.io/tye-js/bsvgo:main-26759ee"
-            # 这里我们选择使用 'main' 标签进行部署。如果需要其他标签，请调整 'awk' 的逻辑。
-            # 或者，直接将需要的标签作为输出，而不是所有标签。
-            DEPLOY_IMAGE_TAG=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -d',' -f1 | tr -d '[:space:]')
+            DEPLOY_IMAGE_TAG=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | head -n 1)
 
             echo "Pulling latest Docker image: ${DEPLOY_IMAGE_TAG}"
             docker pull "${DEPLOY_IMAGE_TAG}"
