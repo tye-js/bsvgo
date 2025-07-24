@@ -27,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: ["node", "server.js"]
     container_name: bsvgo-app
     restart: unless-stopped
     environment:
