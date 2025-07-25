@@ -77,6 +77,7 @@ jobs:
             # 拉取最新代码
             if [ -d ".git" ]; then
               echo "Pulling latest code..."
+              git stash || true
               git pull origin main
             else
               echo "Cloning repository..."
@@ -94,8 +95,31 @@ jobs:
             echo "Pulling latest Docker image: ${DEPLOY_IMAGE_TAG}"
             docker pull "${DEPLOY_IMAGE_TAG}"
 
-            # 更新 docker-compose.yml 中的应用镜像标签（只更新 app 服务）
-            sed -i '/# Next.js 应用/,/container_name: bsvgo-app/ s|image: ghcr.io/tye-js/bsvgo:.*|image: '"${DEPLOY_IMAGE_TAG}"'|g' docker-compose.yml || true
+            # 确保 docker-compose.yml 配置正确
+            echo "Fixing docker-compose.yml configuration..."
+
+            # 确保 PostgreSQL 使用正确的镜像
+            sed -i '/postgres:/,/container_name: bsvgo-postgres/ s|image: ghcr.io/tye-js/bsvgo:.*|image: postgres:16-alpine|g' docker-compose.yml || true
+
+            # 更新应用服务的镜像标签
+            sed -i '/app:/,/container_name: bsvgo-app/ s|image: ghcr.io/tye-js/bsvgo:.*|image: '"${DEPLOY_IMAGE_TAG}"'|g' docker-compose.yml || true
+
+            # 创建环境变量文件
+            echo "Creating environment file..."
+            cat > .env << 'EOF'
+            POSTGRES_DB=bsvgo_db
+            POSTGRES_USER=bsvgo
+            POSTGRES_PASSWORD=Ty6413ty521
+            DATABASE_URL=postgresql://bsvgo:Ty6413ty521@postgres:5432/bsvgo_db
+            NEXTAUTH_URL=https://bsvgo.com
+            NEXTAUTH_SECRET=Ty6413ty521
+            GITHUB_CLIENT_ID=your_github_client_id
+            GITHUB_CLIENT_SECRET=your_github_client_secret
+            NODE_ENV=production
+            NEXT_TELEMETRY_DISABLED=1
+            NEXT_PUBLIC_APP_URL=https://bsvgo.com
+            DOMAIN=bsvgo.com
+            EOF
 
             # 停止现有服务
             echo "Stopping existing services..."

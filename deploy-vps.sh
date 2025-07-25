@@ -45,7 +45,7 @@ check_env() {
     
     if [ ! -f "$ENV_FILE" ]; then
         echo -e "${YELLOW}⚠️  环境变量文件不存在，正在创建...${NC}"
-        cp .env.production $ENV_FILE
+        cp .env $ENV_FILE
         
         echo -e "${RED}❌ 请编辑 $ENV_FILE 文件，填入正确的配置值${NC}"
         echo -e "${YELLOW}必须配置的变量:${NC}"
