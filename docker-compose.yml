@@ -24,9 +24,7 @@ services:
 
   # Next.js 应用
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/tye-js/bsvgo:main
     container_name: bsvgo-app
     restart: unless-stopped
     environment:

@@ -94,8 +94,8 @@ jobs:
             echo "Pulling latest Docker image: ${DEPLOY_IMAGE_TAG}"
             docker pull "${DEPLOY_IMAGE_TAG}"
 
-            # 更新 docker-compose.yml 中的镜像标签
-            sed -i "s|image: .*|image: ${DEPLOY_IMAGE_TAG}|g" docker-compose.yml || true
+            # 更新 docker-compose.yml 中的应用镜像标签（只更新 app 服务）
+            sed -i '/# Next.js 应用/,/container_name: bsvgo-app/ s|image: ghcr.io/tye-js/bsvgo:.*|image: '"${DEPLOY_IMAGE_TAG}"'|g' docker-compose.yml || true
 
             # 停止现有服务
             echo "Stopping existing services..."
@@ -104,20 +104,61 @@ jobs:
             # 清理未使用的镜像
             docker image prune -f || true
 
-            # 启动服务
-            echo "Starting services..."
-            docker-compose up -d
+            # 分步启动服务
+            echo "Starting PostgreSQL..."
+            docker-compose up -d postgres
 
-            # 等待服务启动
-            echo "Waiting for services to start..."
-            sleep 30
+            # 等待数据库启动
+            echo "Waiting for PostgreSQL..."
+            for i in {1..30}; do
+                if docker-compose exec -T postgres pg_isready -U bsvgo -d bsvgo_db > /dev/null 2>&1; then
+                    echo "PostgreSQL is ready"
+                    break
+                fi
+                echo -n "."
+                sleep 2
+            done
 
-            # 检查服务状态
-            echo "Checking service status..."
+            # 确保数据库存在
+            docker-compose exec -T postgres psql -U bsvgo -c "CREATE DATABASE bsvgo_db;" 2>/dev/null || echo "Database exists"
+
+            # 启动应用
+            echo "Starting application..."
+            docker-compose up -d app
+
+            # 等待应用启动
+            echo "Waiting for application..."
+            for i in {1..60}; do
+                if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+                    echo "Application is ready"
+                    break
+                fi
+                echo -n "."
+                sleep 2
+            done
+
+            # 启动 Nginx
+            echo "Starting Nginx..."
+            docker-compose up -d nginx
+
+            # 最终检查
+            echo "Final service check..."
             docker-compose ps
 
             # 检查应用健康状态
             echo "Checking application health..."
-            curl -f http://localhost:3000/api/health || echo "Health check failed"
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+                echo "✅ Application health check passed"
+            else
+                echo "❌ Application health check failed"
+                docker-compose logs app
+            fi
 
-            echo "Deployment completed!"
+            # 检查 Nginx 访问
+            if curl -I http://localhost > /dev/null 2>&1; then
+                echo "✅ Nginx access successful"
+                echo "🎉 Deployment completed successfully!"
+            else
+                echo "❌ Nginx access failed"
+                docker-compose logs nginx
+            fi
