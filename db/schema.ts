@@ -9,6 +9,9 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }).notNull(),
   avatar: text('avatar'),
   isAdmin: boolean('is_admin').default(false).notNull(),
+  membershipLevel: varchar('membership_level', { length: 20 }).default('free').notNull(), // free, premium, vip
+  status: varchar('status', { length: 20 }).default('active').notNull(), // active, disabled
+  lastLoginAt: timestamp('last_login_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

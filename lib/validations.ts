@@ -47,5 +47,43 @@ export const createCommentSchema = z.object({
   parentId: z.string().uuid('父评论ID格式不正确').optional(),
 });
 
+// 用户管理验证规则
+export const updateUserSchema = z.object({
+  name: z.string().min(1, '用户名不能为空').max(255, '用户名不能超过255个字符').optional(),
+  email: z.string().email('邮箱格式不正确').max(255, '邮箱不能超过255个字符').optional(),
+  membershipLevel: z.enum(['free', 'premium', 'vip'], {
+    errorMap: () => ({ message: '会员等级必须是 free、premium 或 vip' })
+  }).optional(),
+  status: z.enum(['active', 'disabled'], {
+    errorMap: () => ({ message: '状态必须是 active 或 disabled' })
+  }).optional(),
+  avatar: z.string().url('头像必须是有效的URL').optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, '当前密码不能为空'),
+  newPassword: z.string()
+    .min(8, '新密码至少需要8个字符')
+    .max(100, '新密码不能超过100个字符')
+    .regex(/^(?=.*[a-zA-Z])(?=.*\d)/, '新密码必须包含至少一个字母和一个数字'),
+  confirmPassword: z.string().min(1, '确认密码不能为空'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: '两次输入的密码不一致',
+  path: ['confirmPassword'],
+});
+
+export const userListParamsSchema = z.object({
+  page: z.number().min(1, '页码必须大于0').optional(),
+  pageSize: z.number().min(1, '每页数量必须大于0').max(100, '每页数量不能超过100').optional(),
+  search: z.string().max(255, '搜索关键词不能超过255个字符').optional(),
+  membershipLevel: z.enum(['free', 'premium', 'vip']).optional(),
+  status: z.enum(['active', 'disabled']).optional(),
+  sortBy: z.enum(['createdAt', 'lastLoginAt', 'name', 'email']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
 export type UpdateDocumentInput = z.infer<typeof updateDocumentSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type UserListParamsInput = z.infer<typeof userListParamsSchema>;

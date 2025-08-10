@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getUserByEmail, verifyPassword } from '@/lib/db/users';
+import { getUserByEmail, verifyPassword, updateLastLoginAt } from '@/lib/db/users';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,6 +25,9 @@ export const authOptions: NextAuthOptions = {
           if (!isValidPassword) {
             return null;
           }
+
+          // 更新最后登录时间
+          await updateLastLoginAt(user.id);
 
           return {
             id: user.id,
