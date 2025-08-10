@@ -52,10 +52,10 @@ export const updateUserSchema = z.object({
   name: z.string().min(1, '用户名不能为空').max(255, '用户名不能超过255个字符').optional(),
   email: z.string().email('邮箱格式不正确').max(255, '邮箱不能超过255个字符').optional(),
   membershipLevel: z.enum(['free', 'premium', 'vip'], {
-    errorMap: () => ({ message: '会员等级必须是 free、premium 或 vip' })
+    message: '会员等级必须是 free、premium 或 vip'
   }).optional(),
   status: z.enum(['active', 'disabled'], {
-    errorMap: () => ({ message: '状态必须是 active 或 disabled' })
+    message: '状态必须是 active 或 disabled'
   }).optional(),
   avatar: z.string().url('头像必须是有效的URL').optional(),
 });

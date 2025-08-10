@@ -5,12 +5,12 @@ import { updateUser, deleteUser, getUserById } from '@/lib/db/users'
 import { updateUserSchema } from '@/lib/validations'
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.isAdmin) {
       return NextResponse.json(
         { message: '权限不足' },
@@ -18,7 +18,8 @@ export async function GET(
       )
     }
 
-    const user = await getUserById(params.id)
+    const { id } = await params
+    const user = await getUserById(id)
     
     if (!user) {
       return NextResponse.json(
@@ -43,11 +44,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.isAdmin) {
       return NextResponse.json(
         { message: '权限不足' },
@@ -58,7 +59,8 @@ export async function PATCH(
     const body = await request.json()
     const validatedData = updateUserSchema.parse(body)
 
-    const updatedUser = await updateUser(params.id, validatedData)
+    const { id } = await params
+    const updatedUser = await updateUser(id, validatedData)
     
     // 不返回密码字段
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -83,12 +85,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.isAdmin) {
       return NextResponse.json(
         { message: '权限不足' },
@@ -96,15 +98,17 @@ export async function DELETE(
       )
     }
 
+    const { id } = await params
+
     // 防止删除自己的账户
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
       return NextResponse.json(
         { message: '不能删除自己的账户' },
         { status: 400 }
       )
     }
 
-    await deleteUser(params.id)
+    await deleteUser(id)
     
     return NextResponse.json({ message: '用户已删除' })
   } catch (error) {

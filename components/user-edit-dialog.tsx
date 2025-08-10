@@ -53,8 +53,8 @@ export function UserEditDialog({
     defaultValues: {
       name: user?.name || '',
       email: user?.email || '',
-      membershipLevel: user?.membershipLevel || 'free',
-      status: user?.status || 'active',
+      membershipLevel: (user?.membershipLevel as 'free' | 'premium' | 'vip') || 'free',
+      status: (user?.status as 'active' | 'disabled') || 'active',
     },
   })
 
@@ -64,8 +64,8 @@ export function UserEditDialog({
       form.reset({
         name: user.name,
         email: user.email,
-        membershipLevel: user.membershipLevel,
-        status: user.status,
+        membershipLevel: user.membershipLevel as 'free' | 'premium' | 'vip',
+        status: user.status as 'active' | 'disabled',
       })
     }
   }, [user, form])

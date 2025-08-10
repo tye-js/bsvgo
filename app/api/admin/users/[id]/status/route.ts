@@ -10,11 +10,11 @@ const statusSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.isAdmin) {
       return NextResponse.json(
         { message: '权限不足' },
@@ -22,8 +22,10 @@ export async function PATCH(
       )
     }
 
+    const { id } = await params
+
     // 防止禁用自己的账户
-    if (session.user.id === params.id) {
+    if (session.user.id === id) {
       return NextResponse.json(
         { message: '不能修改自己的账户状态' },
         { status: 400 }
@@ -33,7 +35,7 @@ export async function PATCH(
     const body = await request.json()
     const { status } = statusSchema.parse(body)
 
-    const updatedUser = await updateUserStatus(params.id, status)
+    const updatedUser = await updateUserStatus(id, status)
     
     // 不返回密码字段
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
