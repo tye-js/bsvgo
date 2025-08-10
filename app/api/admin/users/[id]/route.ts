@@ -28,6 +28,7 @@ export async function GET(
     }
 
     // 不返回密码字段
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user
     
     return NextResponse.json(userWithoutPassword)
@@ -60,6 +61,7 @@ export async function PATCH(
     const updatedUser = await updateUser(params.id, validatedData)
     
     // 不返回密码字段
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = updatedUser
     
     return NextResponse.json(userWithoutPassword)

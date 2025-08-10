@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,68 @@ import { User } from "@/db/schema"
 import { UserEditDialog } from "@/components/user-edit-dialog"
 import { UserDeleteDialog } from "@/components/user-delete-dialog"
 import { UserStatusDialog } from "@/components/user-status-dialog"
+
+// 用户操作组件
+function UserActions({ user }: { user: User }) {
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [statusOpen, setStatusOpen] = useState(false)
+
+  const handleSuccess = () => {
+    // 这里可以添加刷新数据的逻辑
+    window.location.reload()
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">打开菜单</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>操作</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            编辑用户
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setStatusOpen(true)}>
+            {user.status === "active" ? "禁用用户" : "启用用户"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-red-600"
+            onClick={() => setDeleteOpen(true)}
+          >
+            删除用户
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <UserEditDialog
+        user={user}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={handleSuccess}
+      />
+
+      <UserStatusDialog
+        user={user}
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        onSuccess={handleSuccess}
+      />
+
+      <UserDeleteDialog
+        user={user}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onSuccess={handleSuccess}
+      />
+    </>
+  )
+}
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -118,64 +180,7 @@ export const columns: ColumnDef<User>[] = [
     id: "actions",
     cell: ({ row }) => {
       const user = row.original
-      const [editOpen, setEditOpen] = React.useState(false)
-      const [deleteOpen, setDeleteOpen] = React.useState(false)
-      const [statusOpen, setStatusOpen] = React.useState(false)
-
-      const handleSuccess = () => {
-        // 这里可以添加刷新数据的逻辑
-        window.location.reload()
-      }
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">打开菜单</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>操作</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                编辑用户
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setStatusOpen(true)}>
-                {user.status === "active" ? "禁用用户" : "启用用户"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={() => setDeleteOpen(true)}
-              >
-                删除用户
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <UserEditDialog
-            user={user}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-            onSuccess={handleSuccess}
-          />
-
-          <UserStatusDialog
-            user={user}
-            open={statusOpen}
-            onOpenChange={setStatusOpen}
-            onSuccess={handleSuccess}
-          />
-
-          <UserDeleteDialog
-            user={user}
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
-            onSuccess={handleSuccess}
-          />
-        </>
-      )
+      return <UserActions user={user} />
     },
   },
 ]

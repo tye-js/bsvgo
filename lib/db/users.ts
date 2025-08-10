@@ -1,4 +1,4 @@
-import { eq, desc, asc, like, and, or, count, sql } from 'drizzle-orm';
+import { eq, desc, asc, like, and, or, count } from 'drizzle-orm';
 import { db, users, type User, type NewUser } from '@/db';
 import bcrypt from 'bcryptjs';
 

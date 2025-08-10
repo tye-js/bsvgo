@@ -36,6 +36,7 @@ export async function PATCH(
     const updatedUser = await updateUserStatus(params.id, status)
     
     // 不返回密码字段
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = updatedUser
     
     return NextResponse.json(userWithoutPassword)

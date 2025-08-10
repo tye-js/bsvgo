@@ -16,7 +16,7 @@ interface SearchParams {
 }
 
 interface UserManagementPageProps {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }
 
 async function getUserData(searchParams: SearchParams) {
@@ -63,7 +63,8 @@ function LoadingSkeleton() {
 }
 
 async function UserManagementContent({ searchParams }: UserManagementPageProps) {
-  const data = await getUserData(searchParams)
+  const resolvedSearchParams = await searchParams
+  const data = await getUserData(resolvedSearchParams)
 
   return (
     <div className="space-y-6">
