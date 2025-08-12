@@ -104,23 +104,6 @@ jobs:
             # 更新应用服务的镜像标签
             sed -i '/app:/,/container_name: bsvgo-app/ s|image: ghcr.io/tye-js/bsvgo:.*|image: '"${DEPLOY_IMAGE_TAG}"'|g' docker-compose.yml || true
 
-            # 创建环境变量文件
-            echo "Creating environment file..."
-            cat > .env << 'EOF'
-            POSTGRES_DB=bsvgo_db
-            POSTGRES_USER=bsvgo
-            POSTGRES_PASSWORD=Ty6413ty521
-            DATABASE_URL=postgresql://bsvgo:Ty6413ty521@postgres:5432/bsvgo_db
-            NEXTAUTH_URL=https://bsvgo.com
-            NEXTAUTH_SECRET=Ty6413ty521
-            GITHUB_CLIENT_ID=your_github_client_id
-            GITHUB_CLIENT_SECRET=your_github_client_secret
-            NODE_ENV=production
-            NEXT_TELEMETRY_DISABLED=1
-            NEXT_PUBLIC_APP_URL=https://bsvgo.com
-            DOMAIN=bsvgo.com
-            EOF
-
             # 停止现有服务
             echo "Stopping existing services..."
             docker-compose down || true

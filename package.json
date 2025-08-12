@@ -13,7 +13,8 @@
     "db:studio": "drizzle-kit studio",
     "db:init": "tsx scripts/init-db.ts",
     "db:seed": "tsx scripts/init-db.ts",
-    "db:reset": "tsx scripts/init-db.ts"
+    "db:reset": "tsx scripts/init-db.ts",
+    "create-admin": "tsx scripts/create-admin-user.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.10.0",
