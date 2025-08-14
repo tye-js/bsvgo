@@ -85,37 +85,42 @@ jobs:
             fi
 
             # 登录到 GitHub Container Registry
+            echo "Logging in to GitHub Container Registry..."
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 拉取最新镜像
-            echo "Pulling latest Docker image..."
-            # image-tag 可能会是类似 "ghcr.io/tye-js/bsvgo:main,ghcr.io/tye-js/bsvgo:latest,ghcr.io/tye-js/bsvgo:main-26759ee"
-            DEPLOY_IMAGE_TAG=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | head -n 1)
+            # 处理镜像标签
+            echo "Processing image tags..."
+            IMAGE_TAGS="${{ needs.build-and-push.outputs.image-tag }}"
+            echo "Available tags: ${IMAGE_TAGS}"
 
-            echo "Pulling latest Docker image: ${DEPLOY_IMAGE_TAG}"
+            # 选择合适的镜像标签
+            DEPLOY_IMAGE_TAG=$(echo "${IMAGE_TAGS}" | tr ',' '\n' | grep "latest" | head -n 1)
+            if [ -z "$DEPLOY_IMAGE_TAG" ]; then
+              DEPLOY_IMAGE_TAG=$(echo "${IMAGE_TAGS}" | tr ',' '\n' | head -n 1)
+            fi
+
+            echo "Selected image: ${DEPLOY_IMAGE_TAG}"
+
+            # 强制拉取最新镜像
+            echo "Pulling latest Docker image..."
             docker pull "${DEPLOY_IMAGE_TAG}"
 
-            # 确保 docker-compose.yml 配置正确
-            echo "Fixing docker-compose.yml configuration..."
-
-            # 确保 PostgreSQL 使用正确的镜像
-            sed -i '/postgres:/,/container_name: bsvgo-postgres/ s|image: ghcr.io/tye-js/bsvgo:.*|image: postgres:16-alpine|g' docker-compose.yml || true
-
-            # 更新应用服务的镜像标签
-            sed -i '/app:/,/container_name: bsvgo-app/ s|image: ghcr.io/tye-js/bsvgo:.*|image: '"${DEPLOY_IMAGE_TAG}"'|g' docker-compose.yml || true
+            # 更新 docker-compose.yml
+            echo "Updating docker-compose.yml..."
+            sed -i "s|image: ghcr.io/tye-js/bsvgo:.*|image: ${DEPLOY_IMAGE_TAG}|g" docker-compose.yml
 
             # 停止现有服务
             echo "Stopping existing services..."
             docker-compose down || true
 
-            # 清理未使用的镜像
+            # 清理旧镜像
             docker image prune -f || true
 
-            # 分步启动服务
-            echo "Starting PostgreSQL..."
+            # 启动服务
+            echo "Starting services..."
             docker-compose up -d postgres
 
-            # 等待数据库启动
+            # 等待数据库
             echo "Waiting for PostgreSQL..."
             for i in {1..30}; do
                 if docker-compose exec -T postgres pg_isready -U bsvgo -d bsvgo_db > /dev/null 2>&1; then
@@ -125,9 +130,6 @@ jobs:
                 echo -n "."
                 sleep 2
             done
-
-            # 确保数据库存在
-            docker-compose exec -T postgres psql -U bsvgo -c "CREATE DATABASE bsvgo_db;" 2>/dev/null || echo "Database exists"
 
             # 启动应用
             echo "Starting application..."

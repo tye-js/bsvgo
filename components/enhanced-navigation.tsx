@@ -55,34 +55,13 @@ export function EnhancedNavigation({ onSearch, categories = [] }: EnhancedNaviga
   };
 
   // 从数据库分类生成导航项
-  const navigationItems = categories.length > 0
-    ? categories.map(category => ({
+  const navigationItems = categories.map(category => ({
         name: category.name,
         href: `/category/${category.slug}`,
         icon: getIconForCategory(category.slug),
         description: category.description || `${category.name}相关内容`
       }))
-    : [
-        // 默认导航项（当没有分类时）
-        {
-          name: '最新新闻',
-          href: '/category/news',
-          icon: Newspaper,
-          description: '最新的技术资讯和行业动态'
-        },
-        {
-          name: '技术解析',
-          href: '/category/tech-analysis',
-          icon: Code,
-          description: '深度技术分析和解决方案'
-        },
-        {
-          name: '应用交易',
-          href: '/category/app-trading',
-          icon: TrendingUp,
-          description: '应用开发和交易相关内容'
-        },
-      ];
+
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">

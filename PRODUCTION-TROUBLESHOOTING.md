@@ -121,11 +121,11 @@ NEXTAUTH_DEBUG=true
 
 1. **直接数据库操作创建用户：**
 ```sql
-INSERT INTO users (id, email, password, name, "isAdmin", status, "membershipLevel", "createdAt", "updatedAt")
+INSERT INTO users (id, email, password, name, is_admin, status, membership_level, created_at, updated_at)
 VALUES (
   gen_random_uuid(),
   'emergency@bsvgo.com',
-  '$2a$12$hash_of_password_here',  -- 使用 bcrypt 加密的密码
+  '$2b$12$9itKBETyHrW5U0/ApTwNluB5Q1nHtXGy1KTVZalQ8T6t6L2wA12m6',
   'Emergency Admin',
   true,
   'active',
