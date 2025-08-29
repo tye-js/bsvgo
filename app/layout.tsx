@@ -17,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "TechBlog - 现代化技术博客",
+  title: "BsvGo - 现代化技术博客",
   description: "分享最新的技术见解、开发经验和创新思维",
 };
 

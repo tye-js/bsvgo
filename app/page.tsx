@@ -1,15 +1,17 @@
 
 import { getPublishedDocuments } from '@/lib/db/documents';
-import { getAllCategories } from '@/lib/db/categories';
 import { ModernBlogLayout } from '@/components/modern-blog-layout';
 
 export default async function Home() {
 
   try {
-    const [documents, categories] = await Promise.all([
+    const result = await Promise.allSettled([
       getPublishedDocuments(),
-      getAllCategories()
+      getCategoryFromApi()
     ]);
+    const documents = result[0].status==="fulfilled"?result[0].value:undefined
+ 
+    const categories = result[1].status==="fulfilled"?result[1].value:undefined
 
     return <ModernBlogLayout
       documents={documents as any}
@@ -23,4 +25,11 @@ export default async function Home() {
       categories={[]}
     />;
   }
+}
+
+async function getCategoryFromApi() {
+  const result = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`,{
+    method:'GET'
+  })
+  return await result.json()
 }
