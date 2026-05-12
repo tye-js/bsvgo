@@ -37,6 +37,12 @@ export type LocalizedPost = {
   tags: string[];
 };
 
+export type LocalizedTag = {
+  slug: string;
+  name: string;
+  count: number;
+};
+
 export function getFallbackCategories(locale: Locale): LocalizedCategory[] {
   return categories.map((category) => ({
     slug: category.slug,
@@ -163,6 +169,77 @@ export async function getLocalizedPosts(locale: Locale): Promise<LocalizedPost[]
 export async function getFeaturedPost(locale: Locale) {
   const localizedPosts = await getLocalizedPosts(locale);
   return localizedPosts.find((post) => post.featured) ?? null;
+}
+
+export async function getLocalizedTags(locale: Locale): Promise<LocalizedTag[]> {
+  try {
+    const posts = await getLocalizedPosts(locale);
+    const counts = new Map<string, { name: string; count: number }>();
+
+    for (const post of posts) {
+      for (const tag of post.tags ?? []) {
+        const slug = tag
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+
+        const current = counts.get(slug);
+        counts.set(slug, {
+          name: current?.name ?? tag,
+          count: (current?.count ?? 0) + 1,
+        });
+      }
+    }
+
+    return [...counts.entries()].map(([slug, value]) => ({
+      slug,
+      name: value.name,
+      count: value.count,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getRelatedPosts(
+  locale: Locale,
+  slug: string,
+  limit = 3
+) {
+  const localizedPosts = await getLocalizedPosts(locale);
+  const current = localizedPosts.find((post) => post.slug === slug);
+
+  if (!current) {
+    return [];
+  }
+
+  const scored = localizedPosts
+    .filter((post) => post.slug !== slug)
+    .map((post) => {
+      const sharedTags = (post.tags ?? []).filter((tag) =>
+        (current.tags ?? []).includes(tag)
+      ).length;
+
+      const sharedCategory = post.categorySlug === current.categorySlug ? 1 : 0;
+      const featuredBoost = post.featured ? 1 : 0;
+
+      return {
+        post,
+        score: sharedTags * 3 + sharedCategory * 2 + featuredBoost,
+      };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || b.post.publishedAt.localeCompare(a.post.publishedAt))
+    .slice(0, limit)
+    .map((entry) => entry.post);
+
+  if (scored.length > 0) {
+    return scored;
+  }
+
+  return localizedPosts
+    .filter((post) => post.slug !== slug)
+    .slice(0, limit);
 }
 
 export async function getPostData(locale: Locale, slug: string) {

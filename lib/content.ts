@@ -3,6 +3,13 @@ import { Locale } from "./i18n";
 export const categorySlugs = ["blockchain", "ai", "infrastructure"] as const;
 export type CategorySlug = (typeof categorySlugs)[number];
 
+export function slugifyTag(tag: string) {
+  return tag
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 export type CategoryContent = {
   slug: CategorySlug;
   translations: Record<
@@ -295,4 +302,12 @@ export function getCategoryBySlug(slug: string) {
 
 export function getPostBySlug(slug: string) {
   return posts.find((post) => post.slug === slug);
+}
+
+export function getAllTagNames() {
+  return [...new Set(posts.flatMap((post) => post.tags))];
+}
+
+export function getAllTagSlugs() {
+  return getAllTagNames().map((tag) => slugifyTag(tag));
 }

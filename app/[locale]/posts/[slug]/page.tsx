@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
-import { getPostData } from "@/lib/blog";
-import { posts } from "@/lib/content";
+import { getPostData, getRelatedPosts } from "@/lib/blog";
+import { posts, slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
 
@@ -62,6 +62,7 @@ export default async function PostPage({
   }
 
   const post = await getPostData(locale, slug);
+  const relatedPosts = post ? await getRelatedPosts(locale, slug) : [];
   const copy = uiCopy[locale];
 
   if (!post) {
@@ -95,12 +96,13 @@ export default async function PostPage({
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               {(post.tags ?? []).map((tag) => (
-                <span
+                <Link
                   key={tag}
-                  className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                  href={`/${locale}/tag/${slugifyTag(tag)}`}
+                  className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
                 >
                   {tag}
-                </span>
+                </Link>
               ))}
             </div>
           </div>
@@ -141,6 +143,34 @@ export default async function PostPage({
           </Link>
         ) : null}
       </nav>
+      {relatedPosts.length > 0 ? (
+        <section className="border-t border-teal-900/10 bg-white">
+          <div className="mx-auto max-w-4xl px-5 py-16">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+              {copy.relatedTitle}
+            </p>
+            <div className="mt-6 grid gap-4">
+              {relatedPosts.map((related) => (
+                <Link
+                  key={related.slug}
+                  href={`/${locale}/posts/${related.slug}`}
+                  className="rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] p-5 transition hover:border-emerald-300"
+                >
+                  <p className="text-sm text-emerald-700">
+                    {related.categoryName}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">
+                    {related.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    {related.excerpt}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

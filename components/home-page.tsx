@@ -10,6 +10,7 @@ import {
   getFeaturedPost,
   getLocalizedPosts,
 } from "@/lib/blog";
+import { slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
 
@@ -105,31 +106,37 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 {copy.sectionDescription}
               </p>
             </div>
-            <Link
-              href={`/${locale}/posts/${featured.slug}`}
-              className="rounded-lg border border-teal-900/10 bg-white p-7 transition hover:border-emerald-300"
-            >
+            <div className="rounded-lg border border-teal-900/10 bg-white p-7 transition hover:border-emerald-300">
               <p className="text-sm text-emerald-700">
                 {featured.categoryName} / {formatDate(featured.publishedAt, locale)}
               </p>
+              <h3 className="mt-5 text-2xl font-semibold leading-tight text-slate-900">
+                <Link href={`/${locale}/posts/${featured.slug}`}>
+                  {featured.title}
+                </Link>
+              </h3>
               <p className="mt-5 text-xl leading-8 text-slate-800">
                 {featured.excerpt}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {(featured.tags ?? []).map((tag) => (
-                  <span
+                  <Link
                     key={tag}
-                    className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                    href={`/${locale}/tag/${slugifyTag(tag)}`}
+                    className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
-              <span className="mt-8 inline-flex items-center font-semibold text-emerald-700">
+              <Link
+                href={`/${locale}/posts/${featured.slug}`}
+                className="mt-8 inline-flex items-center font-semibold text-emerald-700"
+              >
                 {copy.readMore}
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </span>
-            </Link>
+              </Link>
+            </div>
           </div>
         </section>
       ) : null}

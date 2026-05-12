@@ -29,6 +29,9 @@ export const uiCopy: Record<
     latestDescription: string;
     sectionTitle: string;
     sectionDescription: string;
+    relatedTitle: string;
+    tagArchiveTitle: string;
+    tagCountLabel: string;
     readMore: string;
     publishedOn: string;
     readingTime: string;
@@ -52,6 +55,9 @@ export const uiCopy: Record<
     sectionTitle: "Featured article",
     sectionDescription:
       "A highlighted read that reflects the site’s current direction.",
+    relatedTitle: "Recommended articles",
+    tagArchiveTitle: "Tag archive",
+    tagCountLabel: "articles",
     readMore: "Read more",
     publishedOn: "Published",
     readingTime: "min read",
@@ -72,6 +78,9 @@ export const uiCopy: Record<
     latestDescription: "围绕链上设计、AI 工作流与开发者基础设施的实践内容。",
     sectionTitle: "精选文章",
     sectionDescription: "代表站点当前方向的一篇重点阅读内容。",
+    relatedTitle: "推荐文章",
+    tagArchiveTitle: "标签归档",
+    tagCountLabel: "篇文章",
     readMore: "阅读全文",
     publishedOn: "发布于",
     readingTime: "分钟阅读",

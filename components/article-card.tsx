@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
 
@@ -44,12 +45,13 @@ export function ArticleCard({ locale, post }: ArticleCardProps) {
               {post.readingMinutes} {copy.readingTime}
             </span>
             {(post.tags ?? []).map((tag) => (
-              <span
+              <Link
                 key={tag}
-                className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                href={`/${locale}/tag/${slugifyTag(tag)}`}
+                className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         </div>
