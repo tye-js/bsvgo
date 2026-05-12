@@ -1,39 +1,43 @@
-name: Deploy to Ubuntu Server
+name: Deploy BSVgo
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
+          cache: "npm"
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Connection successful"
+            set -e
             cd /home/${{ secrets.SERVER_USER }}/bsvgo
-            pm2 stop ecosystem.config.cjs
-            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} .
-            rm -rf node_modules
-            rm -rf .next
-            echo "remove success"
             git pull origin main
-            echo "git pull successfiul"
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-            echo "set DATABASE_URL"
-            npm install
+            printf "DATABASE_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\n" "${{ secrets.DATABASE_URL }}" "${{ secrets.NEXT_PUBLIC_SITE_URL }}" > .env
+            npm ci
+            npm run db:migrate
             npm run build
-            pm2 start ecosystem.config.cjs
-            echo "pm2 start success"
+            pm2 startOrReload ecosystem.config.cjs

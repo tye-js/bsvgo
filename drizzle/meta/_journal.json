@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1753175315489,
-      "tag": "0000_tense_azazel",
+      "when": 1778572496344,
+      "tag": "0000_bsvgo_blog",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1753178024061,
-      "tag": "0001_lame_bill_hollister",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1754645214250,
-      "tag": "0002_superb_revanche",
+      "when": 1778573999000,
+      "tag": "0001_post_tags",
       "breakpoints": true
     }
   ]

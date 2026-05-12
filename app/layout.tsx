@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-import { SessionProvider } from "@/components/providers/session-provider";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { siteConfig } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "BsvGo - 现代化技术博客",
-  description: "分享最新的技术见解、开发经验和创新思维",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: "BSVgo",
+    template: "%s | BSVgo",
+  },
+  description: siteConfig.description,
+  alternates: {
+    languages: {
+      en: "/en",
+      zh: "/zh",
+    },
+  },
+  openGraph: {
+    title: "BSVgo",
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: "BSVgo",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -27,20 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          defaultTheme="system"
-          storageKey="techblog-ui-theme"
-        >
-          <SessionProvider>
-            {children}
-            <Toaster />
-          </SessionProvider>
-        </ThemeProvider>
-      </body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,164 +1,112 @@
-import { pgTable, text, timestamp, uuid, boolean, varchar, integer } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from "drizzle-orm";
+import {
+  boolean,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  varchar,
+  uuid,
+} from "drizzle-orm/pg-core";
 
-// 用户表
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  password: text('password').notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
-  avatar: text('avatar'),
-  isAdmin: boolean('is_admin').default(false).notNull(),
-  membershipLevel: varchar('membership_level', { length: 20 }).default('free').notNull(), // free, premium, vip
-  status: varchar('status', { length: 20 }).default('active').notNull(), // active, disabled
-  lastLoginAt: timestamp('last_login_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+export const categories = pgTable("categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  description: text("description"),
+  color: varchar("color", { length: 32 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// 分类表
-export const categories = pgTable('categories', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 100 }).notNull().unique(),
-  slug: varchar('slug', { length: 100 }).notNull().unique(),
-  description: text('description'),
-  color: varchar('color', { length: 7 }).default('#3B82F6'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+export const categoryTranslations = pgTable("category_translations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => categories.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 8 }).notNull(),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: text("description").notNull(),
 });
 
-// 标签表
-export const tags = pgTable('tags', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 50 }).notNull().unique(),
-  slug: varchar('slug', { length: 50 }).notNull().unique(),
-  color: varchar('color', { length: 7 }).default('#6B7280'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+export const posts = pgTable("posts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => categories.id, { onDelete: "restrict" }),
+  featured: boolean("featured").notNull().default(false),
+  coverImage: text("cover_image").notNull(),
+  publishedAt: timestamp("published_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// 文档表
-export const documents = pgTable('documents', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  content: text('content').notNull().default(''),
-  excerpt: text('excerpt'),
-  slug: text('slug').notNull().unique(),
-  keywords: text('keywords'), // 关键字，逗号分隔
-  featuredImage: text('featured_image'),
-  authorId: uuid('author_id').references(() => users.id).notNull(),
-  categoryId: uuid('category_id').references(() => categories.id),
-  published: boolean('published').default(false).notNull(),
-  viewCount: integer('view_count').default(0).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+export const tags = pgTable("tags", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 80 }).notNull().unique(),
+  name: varchar("name", { length: 120 }).notNull(),
 });
 
-// 文档标签关联表
-export const documentTags = pgTable('document_tags', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  documentId: uuid('document_id').references(() => documents.id).notNull(),
-  tagId: uuid('tag_id').references(() => tags.id).notNull(),
+export const postTags = pgTable(
+  "post_tags",
+  {
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.postId, table.tagId] })]
+);
+
+export const postTranslations = pgTable("post_translations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 8 }).notNull(),
+  title: varchar("title", { length: 220 }).notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  readingMinutes: integer("reading_minutes").notNull(),
+  seoTitle: varchar("seo_title", { length: 220 }).notNull(),
+  seoDescription: varchar("seo_description", { length: 320 }).notNull(),
 });
 
-// 评论表
-export const comments = pgTable('comments', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  content: text('content').notNull(),
-  authorId: uuid('author_id').references(() => users.id).notNull(),
-  documentId: uuid('document_id').references(() => documents.id).notNull(),
-  parentId: uuid('parent_id'), // 支持回复，稍后添加外键约束
-  published: boolean('published').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// 收藏表
-export const favorites = pgTable('favorites', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
-  documentId: uuid('document_id').references(() => documents.id).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-// 关系定义
-export const usersRelations = relations(users, ({ many }) => ({
-  documents: many(documents),
-  comments: many(comments),
-  favorites: many(favorites),
+export const categoryRelations = relations(categories, ({ many }) => ({
+  translations: many(categoryTranslations),
+  posts: many(posts),
 }));
 
-export const categoriesRelations = relations(categories, ({ many }) => ({
-  documents: many(documents),
-}));
-
-export const tagsRelations = relations(tags, ({ many }) => ({
-  documentTags: many(documentTags),
-}));
-
-export const documentsRelations = relations(documents, ({ one, many }) => ({
-  author: one(users, {
-    fields: [documents.authorId],
-    references: [users.id],
-  }),
+export const postRelations = relations(posts, ({ one, many }) => ({
   category: one(categories, {
-    fields: [documents.categoryId],
+    fields: [posts.categoryId],
     references: [categories.id],
   }),
-  documentTags: many(documentTags),
-  comments: many(comments),
-  favorites: many(favorites),
+  translations: many(postTranslations),
+  tags: many(postTags),
 }));
 
-export const documentTagsRelations = relations(documentTags, ({ one }) => ({
-  document: one(documents, {
-    fields: [documentTags.documentId],
-    references: [documents.id],
+export const tagRelations = relations(tags, ({ many }) => ({
+  posts: many(postTags),
+}));
+
+export const postTagRelations = relations(postTags, ({ one }) => ({
+  post: one(posts, {
+    fields: [postTags.postId],
+    references: [posts.id],
   }),
   tag: one(tags, {
-    fields: [documentTags.tagId],
+    fields: [postTags.tagId],
     references: [tags.id],
   }),
 }));
 
-export const commentsRelations = relations(comments, ({ one, many }) => ({
-  author: one(users, {
-    fields: [comments.authorId],
-    references: [users.id],
-  }),
-  document: one(documents, {
-    fields: [comments.documentId],
-    references: [documents.id],
-  }),
-  parent: one(comments, {
-    fields: [comments.parentId],
-    references: [comments.id],
-  }),
-  replies: many(comments, {
-    relationName: 'comment_replies',
-  }),
-}));
-
-export const favoritesRelations = relations(favorites, ({ one }) => ({
-  user: one(users, {
-    fields: [favorites.userId],
-    references: [users.id],
-  }),
-  document: one(documents, {
-    fields: [favorites.documentId],
-    references: [documents.id],
-  }),
-}));
-
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
 export type Category = typeof categories.$inferSelect;
-export type NewCategory = typeof categories.$inferInsert;
+export type CategoryTranslation = typeof categoryTranslations.$inferSelect;
+export type Post = typeof posts.$inferSelect;
+export type PostTranslation = typeof postTranslations.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
-export type NewTag = typeof tags.$inferInsert;
-export type Document = typeof documents.$inferSelect;
-export type NewDocument = typeof documents.$inferInsert;
-export type DocumentTag = typeof documentTags.$inferSelect;
-export type NewDocumentTag = typeof documentTags.$inferInsert;
-export type Comment = typeof comments.$inferSelect;
-export type NewComment = typeof comments.$inferInsert;
-export type Favorite = typeof favorites.$inferSelect;
-export type NewFavorite = typeof favorites.$inferInsert;
+export type PostTag = typeof postTags.$inferSelect;
