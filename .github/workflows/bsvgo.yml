@@ -50,6 +50,7 @@ jobs:
             printf "DATABASE_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\n" "$DATABASE_URL" "$NEXT_PUBLIC_SITE_URL" > .env
             npm ci
             npm run db:migrate
-            npm run db:seed
             npm run build
-            pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
+            curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/en

@@ -5,7 +5,6 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { ArticleCard } from "@/components/article-card";
 import {
   getFeaturedPost,
   getLocalizedPosts,
@@ -32,6 +31,17 @@ const highlights = [
   },
 ];
 
+const heroArticleCopy = {
+  en: {
+    kicker: "Latest read",
+  },
+  zh: {
+    kicker: "最新文章",
+  },
+} satisfies Record<Locale, {
+  kicker: string;
+}>;
+
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = uiCopy[locale];
   const [posts, featured] = await Promise.all([
@@ -39,13 +49,20 @@ export async function HomePage({ locale }: { locale: Locale }) {
     getFeaturedPost(locale),
   ]);
   const tags = [...new Set(posts.flatMap((post) => post.tags))].slice(0, 10);
+  const latestPost = posts[0];
+  const heroArticle = latestPost ?? featured;
+  const heroArticleLabel = heroArticleCopy[locale];
+  const featuredPosts = [
+    ...posts.filter((post) => post.featured),
+    ...posts.filter((post) => !post.featured),
+  ].slice(0, 3);
 
   return (
     <main>
       <section className="relative isolate overflow-hidden bg-hero-grid text-slate-900">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.5)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
-        <div className="relative mx-auto max-w-7xl px-5 py-8 md:py-10">
-          <div className="max-w-4xl">
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-8 md:py-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.72fr)] lg:items-center">
+          <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
               {copy.heroKicker}
             </p>
@@ -89,59 +106,130 @@ export async function HomePage({ locale }: { locale: Locale }) {
               </Link>
             </div>
           </div>
+          {heroArticle ? (
+            <aside className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white/80 shadow-sm backdrop-blur-md">
+              <Link
+                href={`/${locale}/posts/${heroArticle.slug}`}
+                className="group block"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                  <img
+                    src={heroArticle.coverImage}
+                    alt=""
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/44 via-slate-950/6 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+                    <span className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 backdrop-blur-sm">
+                      {heroArticleLabel.kicker}
+                    </span>
+                    <span className="rounded-md bg-emerald-200 px-3 py-1.5 text-xs font-semibold text-slate-950">
+                      {heroArticle.categoryName}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+              <div className="p-5">
+                <h2 className="text-2xl font-bold leading-tight text-slate-950">
+                  <Link href={`/${locale}/posts/${heroArticle.slug}`}>
+                    {heroArticle.title}
+                  </Link>
+                </h2>
+                <p className="mt-3 text-base leading-7 text-slate-600">
+                  {heroArticle.excerpt}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {(heroArticle.tags ?? []).slice(0, 4).map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/${locale}/tag/${slugifyTag(tag)}`}
+                      className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          ) : null}
         </div>
       </section>
 
-      {featured ? (
-        <section className="bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(239,246,255,0.95))] py-20 text-slate-900">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
-                {copy.sectionTitle}
-              </p>
-              <h2 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
-                {featured.title}
-              </h2>
-              <p className="mt-5 leading-8 text-slate-600">
-                {copy.sectionDescription}
-              </p>
-            </div>
-            <div className="rounded-lg border border-teal-900/10 bg-white p-7 transition hover:border-emerald-300">
-              <p className="text-sm text-emerald-700">
-                {featured.categoryName} / {formatDate(featured.publishedAt, locale)}
-              </p>
-              <h3 className="mt-5 text-2xl font-semibold leading-tight text-slate-900">
-                <Link href={`/${locale}/posts/${featured.slug}`}>
-                  {featured.title}
-                </Link>
-              </h3>
-              <p className="mt-5 text-xl leading-8 text-slate-800">
-                {featured.excerpt}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {(featured.tags ?? []).map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/${locale}/tag/${slugifyTag(tag)}`}
-                    className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
-                  >
-                    {tag}
-                  </Link>
-                ))}
+      {featuredPosts.length > 0 ? (
+        <section className="border-y border-emerald-900/10 bg-white py-16 text-slate-900">
+          <div className="mx-auto max-w-7xl px-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                  {copy.sectionTitle}
+                </p>
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 md:text-5xl">
+                  {copy.sectionDescription}
+                </h2>
               </div>
-              <Link
-                href={`/${locale}/posts/${featured.slug}`}
-                className="mt-8 inline-flex items-center font-semibold text-emerald-700"
-              >
-                {copy.readMore}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            </div>
+
+            <div className="mt-10 flex gap-5 overflow-x-auto pb-3 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
+              {featuredPosts.map((post) => (
+                <article
+                  key={post.slug}
+                  className="min-w-[82vw] overflow-hidden rounded-lg border border-slate-200 bg-[rgb(247,250,249)] transition hover:border-emerald-300 md:min-w-0"
+                >
+                  <Link
+                    href={`/${locale}/posts/${post.slug}`}
+                    className="group block"
+                  >
+                    <div className="relative aspect-[16/9] overflow-hidden bg-emerald-50">
+                      <img
+                        src={post.coverImage}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/36 via-transparent to-transparent" />
+                      <span className="absolute bottom-4 left-4 rounded-md bg-white/90 px-3 py-1.5 text-xs font-semibold text-emerald-700 backdrop-blur-sm">
+                        {post.categoryName}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="p-5">
+                    <p className="text-sm text-slate-500">
+                      {formatDate(post.publishedAt, locale)}
+                    </p>
+                    <h3 className="mt-3 text-xl font-semibold leading-tight text-slate-950">
+                      <Link href={`/${locale}/posts/${post.slug}`}>
+                        {post.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      {post.excerpt}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(post.tags ?? []).slice(0, 3).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/${locale}/tag/${slugifyTag(tag)}`}
+                          className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          {tag}
+                        </Link>
+                      ))}
+                    </div>
+                    <Link
+                      href={`/${locale}/posts/${post.slug}`}
+                      className="mt-5 inline-flex items-center font-semibold text-emerald-700"
+                    >
+                      {copy.readMore}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </section>
       ) : null}
 
-      <section id="latest" className="bg-white py-20">
+      <section id="latest" className="border-b border-emerald-900/10 bg-[rgb(240,253,250)] py-20">
         <div className="mx-auto max-w-7xl px-5">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold tracking-tight text-slate-950 md:text-5xl">
@@ -151,15 +239,56 @@ export async function HomePage({ locale }: { locale: Locale }) {
               {copy.latestDescription}
             </p>
           </div>
-          <div className="mt-12">
+          <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
-              <ArticleCard key={post.slug} locale={locale} post={post} />
+              <article
+                key={post.slug}
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
+              >
+                <Link
+                  href={`/${locale}/posts/${post.slug}`}
+                  className="group block"
+                >
+                  <div className="relative aspect-[16/9] overflow-hidden bg-emerald-50">
+                    <img
+                      src={post.coverImage}
+                      alt=""
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+                    <span className="absolute bottom-4 left-4 rounded-md bg-white/90 px-3 py-1.5 text-xs font-semibold text-emerald-700 backdrop-blur-sm">
+                      {post.categoryName}
+                    </span>
+                  </div>
+                </Link>
+                <div className="p-5">
+                  <h3 className="text-xl font-semibold leading-tight text-slate-950">
+                    <Link href={`/${locale}/posts/${post.slug}`}>
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {post.excerpt}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {(post.tags ?? []).slice(0, 3).map((tag) => (
+                      <Link
+                        key={tag}
+                        href={`/${locale}/tag/${slugifyTag(tag)}`}
+                        className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[rgb(247,250,249)] py-16">
+      <section className="bg-white py-16">
         <div className="mx-auto grid max-w-7xl gap-6 px-5 md:grid-cols-3">
           <div className="rounded-lg border border-teal-900/10 bg-white p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">

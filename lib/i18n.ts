@@ -38,6 +38,10 @@ export const uiCopy: Record<
     backToHome: string;
     previousPost: string;
     nextPost: string;
+    notFoundKicker: string;
+    notFoundTitle: string;
+    notFoundDescription: string;
+    notFoundHint: string;
   }
 > = {
   en: {
@@ -64,6 +68,12 @@ export const uiCopy: Record<
     backToHome: "Back to home",
     previousPost: "Previous",
     nextPost: "Next",
+    notFoundKicker: "404 / Route not found",
+    notFoundTitle: "This page is off the current route.",
+    notFoundDescription:
+      "The article, category, or tag may have moved, or the address may be incomplete.",
+    notFoundHint:
+      "Return to the latest posts or use the navigation to continue exploring blockchain, AI, and infrastructure notes.",
   },
   zh: {
     navHome: "首页",
@@ -87,5 +97,9 @@ export const uiCopy: Record<
     backToHome: "返回首页",
     previousPost: "上一篇",
     nextPost: "下一篇",
+    notFoundKicker: "404 / 页面不存在",
+    notFoundTitle: "这个页面暂时无法抵达。",
+    notFoundDescription: "文章、分类或标签可能已经移动，也可能是链接地址不完整。",
+    notFoundHint: "你可以返回最新文章，或通过导航继续浏览区块链、AI 与基础设施内容。",
   },
 };

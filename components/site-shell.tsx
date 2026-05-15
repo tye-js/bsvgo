@@ -4,7 +4,9 @@ import {
   categorySlugs,
   getCategoryBySlug,
 } from "@/lib/content";
-import { localeLabels, Locale, locales, uiCopy } from "@/lib/i18n";
+import { Locale, uiCopy } from "@/lib/i18n";
+import { BrandLogo } from "@/components/brand-logo";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 type SiteShellProps = {
   locale: Locale;
@@ -21,28 +23,15 @@ export function SiteShell({ locale, children }: SiteShellProps) {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center justify-between gap-3">
               <Link href={`/${locale}`} className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-md bg-emerald-200 text-sm font-black text-slate-900">
-                  B
-                </span>
+                <BrandLogo />
                 <span className="text-lg font-semibold tracking-wide text-slate-900">
                   BSVgo
                 </span>
               </Link>
-              <div className="flex items-center gap-2 text-sm md:hidden">
-                {locales.map((item) => (
-                  <Link
-                    key={item}
-                    href={`/${item}`}
-                    className={
-                      item === locale
-                        ? "rounded-md bg-emerald-100 px-3 py-1.5 font-medium text-slate-900"
-                        : "rounded-md px-3 py-1.5 text-slate-600 hover:bg-emerald-50 hover:text-slate-900"
-                    }
-                  >
-                    {localeLabels[item]}
-                  </Link>
-                ))}
-              </div>
+              <LocaleSwitcher
+                locale={locale}
+                className="flex items-center gap-2 text-sm md:hidden"
+              />
             </div>
             <nav className="flex flex-wrap gap-2 text-sm text-slate-700">
               <Link
@@ -75,21 +64,10 @@ export function SiteShell({ locale, children }: SiteShellProps) {
                 {copy.navLatest}
               </Link>
             </nav>
-            <div className="hidden items-center gap-2 text-sm md:flex">
-              {locales.map((item) => (
-                <Link
-                  key={item}
-                  href={`/${item}`}
-                  className={
-                    item === locale
-                      ? "rounded-md bg-emerald-100 px-3 py-1.5 font-medium text-slate-900"
-                      : "rounded-md px-3 py-1.5 text-slate-600 hover:bg-emerald-50 hover:text-slate-900"
-                  }
-                >
-                  {localeLabels[item]}
-                </Link>
-              ))}
-            </div>
+            <LocaleSwitcher
+              locale={locale}
+              className="hidden items-center gap-2 text-sm md:flex"
+            />
           </div>
         </div>
       </header>

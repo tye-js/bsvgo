@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { HomePage } from "@/components/home-page";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

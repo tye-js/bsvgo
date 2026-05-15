@@ -2,13 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article-card";
 import { getLocalizedPosts, getLocalizedTags } from "@/lib/blog";
-import { getAllTagSlugs, slugifyTag } from "@/lib/content";
+import { slugifyTag } from "@/lib/content";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
 
-export function generateStaticParams() {
-  const slugs = getAllTagSlugs();
-  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

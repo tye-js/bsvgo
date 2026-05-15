@@ -4,16 +4,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
-import { posts, slugifyTag } from "@/lib/content";
+import { slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
 
-export function generateStaticParams() {
-  return posts.flatMap((post) => [
-    { locale: "en", slug: post.slug },
-    { locale: "zh", slug: post.slug },
-  ]);
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

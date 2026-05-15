@@ -5,6 +5,8 @@ import { getLocalizedPosts } from "@/lib/blog";
 import { getCategoryBySlug } from "@/lib/content";
 import { Locale, locales, siteConfig } from "@/lib/i18n";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
