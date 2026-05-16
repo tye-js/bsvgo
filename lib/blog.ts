@@ -153,6 +153,14 @@ export async function getLocalizedCategories(
   }
 }
 
+export async function getLocalizedCategoryBySlug(
+  locale: Locale,
+  slug: string
+): Promise<LocalizedCategory | null> {
+  const categories = await getLocalizedCategories(locale);
+  return categories.find((category) => category.slug === slug) ?? null;
+}
+
 export async function getLocalizedPosts(locale: Locale): Promise<LocalizedPost[]> {
   try {
     const rows = await queryPosts(locale);

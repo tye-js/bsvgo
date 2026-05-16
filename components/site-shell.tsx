@@ -24,7 +24,7 @@ export function SiteShell({ locale, children }: SiteShellProps) {
             <div className="flex items-center justify-between gap-3">
               <Link href={`/${locale}`} className="flex items-center gap-3">
                 <BrandLogo />
-                <span className="text-lg font-semibold tracking-wide text-slate-900">
+                <span className="text-lg font-semibold tracking-[0.12em] text-slate-900">
                   BSVgo
                 </span>
               </Link>
@@ -75,7 +75,9 @@ export function SiteShell({ locale, children }: SiteShellProps) {
       <footer className="border-t border-teal-900/10 bg-[rgb(249,251,250)]">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-4">
           <div>
-            <p className="text-lg font-semibold text-slate-900">BSVgo</p>
+            <p className="text-lg font-semibold tracking-[0.12em] text-slate-900">
+              BSVgo
+            </p>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               English-first technology blog for blockchain, AI, and infrastructure.
             </p>
