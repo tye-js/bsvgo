@@ -525,31 +525,36 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </p>
           </div>
 
-          <div className="mt-5 flex gap-3 overflow-x-auto pb-2">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {promotions.map((article) => (
               <article
                 key={article.title}
-                className="group relative h-44 min-w-[224px] flex-1 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 transition hover:border-emerald-300"
+                className="group overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
               >
-                <img
-                  src={article.image}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-80 transition duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(2,6,23,0.82)_0%,rgba(2,6,23,0.5)_52%,rgba(2,6,23,0.18)_100%)]" />
-                <div className="relative flex h-full flex-col justify-end p-4 text-white">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <span className="rounded-md bg-white/88 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                      {article.category}
-                    </span>
-                    <span className="text-[11px] font-medium text-white/70">
+                <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                  <img
+                    src={article.image}
+                    alt=""
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+                  <span className="absolute bottom-3 left-3 rounded-md bg-emerald-200 px-2.5 py-1 text-xs font-semibold text-slate-900">
+                    {article.category}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
                       {article.sponsor}
                     </span>
+                    <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      {article.category}
+                    </span>
                   </div>
-                  <h3 className="text-base font-semibold leading-snug">
+                  <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
                     {article.title}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/78">
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
                     {article.description}
                   </p>
                 </div>
@@ -583,11 +588,11 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </Link>
           </div>
 
-          <div className="mt-6 flex gap-4 overflow-x-auto pb-2 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {latestPosts.map((post) => (
               <article
                 key={post.slug}
-                className="min-w-[220px] overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300 xl:min-w-0"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
               >
                 <Link href={`/${locale}/posts/${post.slug}`} className="group block">
                   <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
@@ -670,11 +675,11 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 </Link>
               </div>
 
-              <div className="mt-6 flex gap-4 overflow-x-auto pb-2 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {sectionPosts.map((post) => (
                   <article
                     key={post.title}
-                    className={`min-w-[220px] overflow-hidden rounded-lg border border-slate-200 ${style.card} transition hover:border-emerald-300 xl:min-w-0`}
+                    className={`overflow-hidden rounded-lg border border-slate-200 ${style.card} transition hover:border-emerald-300`}
                   >
                     <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
                       <img

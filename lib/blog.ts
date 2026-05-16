@@ -43,6 +43,28 @@ export type LocalizedTag = {
   count: number;
 };
 
+const fallbackCoverImages: Record<string, string> = {
+  blockchain:
+    "https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&fit=crop&w=1600&q=80",
+  ai:
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80",
+  infrastructure:
+    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80",
+};
+
+function normalizeCoverImage(
+  coverImage: string | null | undefined,
+  categorySlug: string
+) {
+  const value = coverImage?.trim();
+
+  if (value) {
+    return value;
+  }
+
+  return fallbackCoverImages[categorySlug] ?? fallbackCoverImages.infrastructure;
+}
+
 export function getFallbackCategories(locale: Locale): LocalizedCategory[] {
   return categories.map((category) => ({
     slug: category.slug,
@@ -62,7 +84,7 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
       return {
         slug: post.slug,
         featured: post.featured,
-        coverImage: post.coverImage,
+        coverImage: normalizeCoverImage(post.coverImage, post.categorySlug),
         publishedAt: post.publishedAt,
         categorySlug: post.categorySlug,
         categoryName: category.translations[locale].name,
@@ -166,6 +188,7 @@ export async function getLocalizedPosts(locale: Locale): Promise<LocalizedPost[]
     const rows = await queryPosts(locale);
     return rows.map((row) => ({
       ...row,
+      coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
       publishedAt: row.publishedAt.toISOString(),
       tags: Array.isArray(row.tags) ? row.tags : [],
     }));
