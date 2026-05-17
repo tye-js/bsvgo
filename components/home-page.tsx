@@ -639,7 +639,27 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
       {categories.map((category) => {
         const categorySlug = category.slug as CategorySlug;
-        const sectionPosts = topicShowcaseArticles[locale][categorySlug];
+        const databaseSectionPosts = posts
+          .filter((post) => post.categorySlug === category.slug)
+          .slice(0, 5)
+          .map((post) => ({
+            title: post.title,
+            excerpt: post.excerpt,
+            image: post.coverImage,
+            publishedAt: post.publishedAt,
+            tags: post.tags,
+            href: `/${locale}/posts/${post.slug}`,
+          }));
+        const fallbackSectionPosts = topicShowcaseArticles[locale][categorySlug].map(
+          (post) => ({
+            ...post,
+            href: null,
+          })
+        );
+        const sectionPosts =
+          databaseSectionPosts.length > 0
+            ? databaseSectionPosts
+            : fallbackSectionPosts;
         const Icon = sectionIcons[categorySlug];
         const style = topicStyles[categorySlug];
 
@@ -678,40 +698,72 @@ export async function HomePage({ locale }: { locale: Locale }) {
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {sectionPosts.map((post) => (
                   <article
-                    key={post.title}
+                    key={post.href ?? post.title}
                     className={`overflow-hidden rounded-lg border border-slate-200 ${style.card} transition hover:border-emerald-300`}
                   >
-                    <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
-                      <img
-                        src={post.image}
-                        alt=""
-                        className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
-                      <span
-                        className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-900 ${style.accent}`}
-                      >
-                        {post.tags[0]}
-                      </span>
-                    </div>
+                    {post.href ? (
+                      <Link href={post.href} className="group block">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                          <img
+                            src={post.image}
+                            alt=""
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+                          <span
+                            className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-900 ${style.accent}`}
+                          >
+                            {post.tags[0] ?? category.name}
+                          </span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                        <img
+                          src={post.image}
+                          alt=""
+                          className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+                        <span
+                          className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-900 ${style.accent}`}
+                        >
+                          {post.tags[0] ?? category.name}
+                        </span>
+                      </div>
+                    )}
                     <div className="p-4">
                       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
                         {formatDate(post.publishedAt, locale)}
                       </p>
                       <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
-                        {post.title}
+                        {post.href ? (
+                          <Link href={post.href}>{post.title}</Link>
+                        ) : (
+                          post.title
+                        )}
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
                         {post.excerpt}
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {post.tags.slice(1).map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600"
-                          >
-                            {tag}
-                          </span>
+                        {post.tags.slice(1, 3).map((tag) => (
+                          post.href ? (
+                            <Link
+                              key={tag}
+                              href={`/${locale}/tag/${slugifyTag(tag)}`}
+                              className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+                            >
+                              {tag}
+                            </Link>
+                          ) : (
+                            <span
+                              key={tag}
+                              className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600"
+                            >
+                              {tag}
+                            </span>
+                          )
                         ))}
                       </div>
                     </div>
