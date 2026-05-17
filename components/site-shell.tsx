@@ -7,6 +7,7 @@ import {
 import { Locale, uiCopy } from "@/lib/i18n";
 import { BrandLogo } from "@/components/brand-logo";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { MobileSiteNav } from "@/components/mobile-site-nav";
 
 type SiteShellProps = {
   locale: Locale;
@@ -15,59 +16,60 @@ type SiteShellProps = {
 
 export function SiteShell({ locale, children }: SiteShellProps) {
   const copy = uiCopy[locale];
+  const navItems = [
+    {
+      href: `/${locale}`,
+      label: copy.navHome,
+    },
+    ...categorySlugs.flatMap((slug) => {
+      const category = getCategoryBySlug(slug);
+
+      if (!category) {
+        return [];
+      }
+
+      return [
+        {
+          href: `/${locale}/category/${slug}`,
+          label: category.translations[locale].name,
+        },
+      ];
+    }),
+    {
+      href: `/${locale}#latest`,
+      label: copy.navLatest,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 border-b border-teal-900/10 bg-[rgba(249,251,250,0.92)] text-slate-800 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-5 py-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center justify-between gap-3">
+        <div className="relative mx-auto max-w-7xl px-5 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               <Link href={`/${locale}`} className="flex items-center gap-3">
                 <BrandLogo />
                 <span className="text-lg font-semibold tracking-[0.12em] text-slate-900">
                   BSVgo
                 </span>
               </Link>
-              <LocaleSwitcher
-                locale={locale}
-                className="flex items-center gap-2 text-sm md:hidden"
-              />
             </div>
-            <nav className="flex flex-wrap gap-2 text-sm text-slate-700">
-              <Link
-                href={`/${locale}`}
-                className="rounded-md px-3 py-1.5 transition hover:bg-emerald-50 hover:text-emerald-700"
-              >
-                {copy.navHome}
-              </Link>
-              {categorySlugs.map((slug) => {
-                const category = getCategoryBySlug(slug);
-
-                if (!category) {
-                  return null;
-                }
-
-                return (
-                  <Link
-                    key={slug}
-                    href={`/${locale}/category/${slug}`}
-                    className="rounded-md px-3 py-1.5 transition hover:bg-emerald-50 hover:text-emerald-700"
-                  >
-                    {category.translations[locale].name}
-                  </Link>
-                );
-              })}
-              <Link
-                href={`/${locale}#latest`}
-                className="rounded-md px-3 py-1.5 transition hover:bg-emerald-50 hover:text-emerald-700"
-              >
-                {copy.navLatest}
-              </Link>
+            <nav className="hidden gap-2 text-sm text-slate-700 md:flex">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-md px-3 py-1.5 transition hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
             <LocaleSwitcher
               locale={locale}
               className="hidden items-center gap-2 text-sm md:flex"
             />
+            <MobileSiteNav locale={locale} navItems={navItems} />
           </div>
         </div>
       </header>
