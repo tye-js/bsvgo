@@ -434,7 +434,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
   const featured = posts.find((post) => post.featured) ?? posts[0] ?? null;
   const latestPosts = posts.slice(0, 5);
-  const promotions = promotedArticles[locale].slice(0, 4);
+  const promotions = promotedArticles[locale].slice(0, 5);
 
   return (
     <main className="bg-[rgb(249,251,250)] text-slate-900">
@@ -512,27 +512,37 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="border-b border-emerald-900/10 bg-white py-8">
+      <section id="popular" className="border-b border-emerald-900/10 bg-white py-16">
         <div className="mx-auto max-w-7xl px-5">
-          <div className="grid grid-cols-[24px_auto_minmax(0,1fr)] items-center gap-2 overflow-hidden whitespace-nowrap">
+          <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
             <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-800">
               <Flame className="h-3 w-3" />
             </div>
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+              popular
+            </p>
             <h2 className="text-sm font-semibold tracking-tight text-slate-950">
               {copy.popularTitle}
             </h2>
             <p className="min-w-0 truncate text-xs leading-5 text-slate-500">
               {copy.popularDescription}
             </p>
+            <Link
+              href={`/${locale}#popular`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
+            >
+              {copy.viewAll}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {promotions.map((article) => (
               <article
                 key={article.title}
-                className="group overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
               >
-                <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                <div className="group relative aspect-[16/10] overflow-hidden bg-emerald-50">
                   <Image
                     src={getRenderableImageSrc(article.image, {
                       title: article.title,
@@ -552,20 +562,20 @@ export async function HomePage({ locale }: { locale: Locale }) {
                   </span>
                 </div>
                 <div className="p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                      {article.sponsor}
-                    </span>
-                    <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      {article.category}
-                    </span>
-                  </div>
+                  <p className="truncate text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                    {article.sponsor}
+                  </p>
                   <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
                     {article.title}
                   </h3>
                   <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
                     {article.description}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      {article.category}
+                    </span>
+                  </div>
                 </div>
               </article>
             ))}
