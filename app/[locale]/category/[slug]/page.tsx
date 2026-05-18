@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -15,6 +16,7 @@ import {
   getLocalizedPosts,
   type LocalizedPost,
 } from "@/lib/blog";
+import { getRenderableImageSrc } from "@/lib/cover-art";
 import {
   getCategoryBySlug,
   slugifyTag,
@@ -233,10 +235,18 @@ export default async function CategoryPage({
           {featured ? (
             <article className={`group relative min-h-[360px] overflow-hidden rounded-lg border ${style.border} bg-slate-950 shadow-sm lg:min-h-[430px]`}>
               <Link href={`/${locale}/posts/${featured.slug}`} className="block h-full">
-                <img
-                  src={featured.coverImage}
+                <Image
+                  src={getRenderableImageSrc(featured.coverImage, {
+                    title: featured.title,
+                    label: featured.categoryName,
+                    subtitle: featured.excerpt,
+                    categorySlug: featured.categorySlug,
+                    variant: "hero",
+                  })}
                   alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-88 transition duration-500 group-hover:scale-[1.03]"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 700px"
+                  className="object-cover opacity-88 transition duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(2,6,23,0.86)_0%,rgba(2,6,23,0.48)_50%,rgba(2,6,23,0.08)_100%)]" />
                 <div className="relative flex min-h-[360px] flex-col justify-end p-5 text-white sm:p-6 lg:min-h-[430px]">
@@ -327,10 +337,18 @@ function CategoryArticleCard({
     >
       <Link href={`/${locale}/posts/${post.slug}`} className="block">
         <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
-          <img
-            src={post.coverImage}
+          <Image
+            src={getRenderableImageSrc(post.coverImage, {
+              title: post.title,
+              label: post.categoryName,
+              subtitle: post.excerpt,
+              categorySlug: post.categorySlug,
+              variant: "card",
+            })}
             alt=""
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            fill
+            sizes="(max-width: 1024px) 50vw, 360px"
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/36 via-transparent to-transparent" />
           <span className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold ${style.accent}`}>

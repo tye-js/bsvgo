@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
+import { getRenderableImageSrc } from "@/lib/cover-art";
 import { slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
+import { promotedArticles } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +62,7 @@ export default async function PostPage({
   const post = await getPostData(locale, slug);
   const relatedPosts = post ? await getRelatedPosts(locale, slug) : [];
   const copy = uiCopy[locale];
+  const promotions = promotedArticles[locale];
 
   if (!post) {
     notFound();
@@ -66,106 +70,191 @@ export default async function PostPage({
 
   return (
     <main className="bg-[rgb(249,251,250)]">
-      <article>
-        <header className="bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(239,246,255,0.95))] px-5 py-20 text-slate-900">
-          <div className="mx-auto max-w-4xl">
-            <Link
-              href={`/${locale}/category/${post.categorySlug}`}
-              className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700"
-            >
-              {post.categoryName}
-            </Link>
-            <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight md:text-6xl">
-              {post.title}
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-slate-600">
-              {post.excerpt}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4 text-sm text-slate-500">
-              <span>
-                {copy.publishedOn} {formatDate(post.publishedAt, locale)}
-              </span>
-              <span>
-                {post.readingMinutes} {copy.readingTime}
-              </span>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {(post.tags ?? []).map((tag) => (
+      <div className="mx-auto max-w-7xl px-5 py-6 lg:py-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <article className="min-w-0">
+            <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
+              <div className="bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(239,246,255,0.95))] px-5 py-8 text-slate-900 sm:px-7 sm:py-10">
                 <Link
-                  key={tag}
-                  href={`/${locale}/tag/${slugifyTag(tag)}`}
-                  className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
+                  href={`/${locale}/category/${post.categorySlug}`}
+                  className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700"
                 >
-                  {tag}
+                  {post.categoryName}
                 </Link>
-              ))}
+                <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                  {post.title}
+                </h1>
+                <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                  {post.excerpt}
+                </p>
+                <div className="mt-7 flex flex-wrap gap-4 text-sm text-slate-500">
+                  <span>
+                    {copy.publishedOn} {formatDate(post.publishedAt, locale)}
+                  </span>
+                  <span>
+                    {post.readingMinutes} {copy.readingTime}
+                  </span>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {(post.tags ?? []).map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/${locale}/tag/${slugifyTag(tag)}`}
+                      className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="relative aspect-[21/9] overflow-hidden bg-emerald-50">
+                <Image
+                  src={getRenderableImageSrc(post.coverImage, {
+                    title: post.title,
+                    label: post.categoryName,
+                    subtitle: post.excerpt,
+                    categorySlug: post.categorySlug,
+                    variant: "hero",
+                  })}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 900px"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            </header>
+
+            <div className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-8 shadow-sm sm:px-7">
+              <ArticleBody content={post.content} />
             </div>
-          </div>
-        </header>
-        <div className="mx-auto max-w-4xl px-5 py-14">
-          <ArticleBody content={post.content} />
+
+            <nav className="mt-8 grid gap-4 md:grid-cols-2">
+              {post.previous ? (
+                <Link
+                  href={`/${locale}/posts/${post.previous.slug}`}
+                  className="rounded-lg border border-teal-900/10 bg-white p-5 transition hover:border-emerald-300"
+                >
+                  <span className="flex items-center text-sm text-slate-500">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {copy.previousPost}
+                  </span>
+                  <p className="mt-3 font-semibold text-slate-950">
+                    {post.previous.title}
+                  </p>
+                </Link>
+              ) : (
+                <div />
+              )}
+              {post.next ? (
+                <Link
+                  href={`/${locale}/posts/${post.next.slug}`}
+                  className="rounded-lg border border-teal-900/10 bg-white p-5 text-right transition hover:border-emerald-300"
+                >
+                  <span className="flex items-center justify-end text-sm text-slate-500">
+                    {copy.nextPost}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </span>
+                  <p className="mt-3 font-semibold text-slate-950">
+                    {post.next.title}
+                  </p>
+                </Link>
+              ) : null}
+            </nav>
+
+            {relatedPosts.length > 0 ? (
+              <section className="mt-8 rounded-lg border border-teal-900/10 bg-white px-5 py-8 shadow-sm sm:px-7">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                  {copy.relatedTitle}
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  {relatedPosts.map((related) => (
+                    <Link
+                      key={related.slug}
+                      href={`/${locale}/posts/${related.slug}`}
+                      className="group overflow-hidden rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] transition hover:border-emerald-300"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                        <Image
+                          src={getRenderableImageSrc(related.coverImage, {
+                            title: related.title,
+                            label: related.categoryName,
+                            subtitle: related.excerpt,
+                            categorySlug: related.categorySlug,
+                            variant: "card",
+                          })}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 100vw, 360px"
+                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" />
+                        <span className="absolute bottom-3 left-3 rounded-md bg-emerald-200 px-2.5 py-1 text-xs font-semibold text-slate-900">
+                          {related.categoryName}
+                        </span>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                          {formatDate(related.publishedAt, locale)}
+                        </p>
+                        <p className="mt-2 text-base font-semibold leading-snug text-slate-900">
+                          {related.title}
+                        </p>
+                        <p className="mt-2 line-clamp-3 text-sm leading-7 text-slate-600">
+                          {related.excerpt}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </article>
+
+          <aside className="lg:sticky lg:top-24">
+            <div className="rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                Sponsored
+              </p>
+              <div className="mt-4 space-y-4">
+                {promotions.map((item) => (
+                  <article
+                    key={item.title}
+                    className="overflow-hidden rounded-md border border-slate-200 bg-[rgb(249,251,250)]"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden bg-emerald-50">
+                      <Image
+                        src={getRenderableImageSrc(item.image, {
+                          title: item.title,
+                          label: item.category,
+                          subtitle: item.description,
+                          categorySlug: item.category,
+                          variant: "compact",
+                        })}
+                        alt=""
+                        fill
+                        sizes="300px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {item.sponsor}
+                      </p>
+                      <h2 className="mt-2 text-sm font-semibold leading-snug text-slate-950">
+                        {item.title}
+                      </h2>
+                      <p className="mt-2 text-xs leading-6 text-slate-600">
+                        {item.description}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
-      </article>
-      <nav className="mx-auto grid max-w-4xl gap-4 px-5 pb-20 md:grid-cols-2">
-        {post.previous ? (
-          <Link
-            href={`/${locale}/posts/${post.previous.slug}`}
-            className="rounded-lg border border-teal-900/10 bg-white p-5 transition hover:border-emerald-300"
-          >
-            <span className="flex items-center text-sm text-slate-500">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {copy.previousPost}
-            </span>
-            <p className="mt-3 font-semibold text-slate-950">
-              {post.previous.title}
-            </p>
-          </Link>
-        ) : (
-          <div />
-        )}
-        {post.next ? (
-          <Link
-            href={`/${locale}/posts/${post.next.slug}`}
-            className="rounded-lg border border-teal-900/10 bg-white p-5 text-right transition hover:border-emerald-300"
-          >
-            <span className="flex items-center justify-end text-sm text-slate-500">
-              {copy.nextPost}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </span>
-            <p className="mt-3 font-semibold text-slate-950">
-              {post.next.title}
-            </p>
-          </Link>
-        ) : null}
-      </nav>
-      {relatedPosts.length > 0 ? (
-        <section className="border-t border-teal-900/10 bg-white">
-          <div className="mx-auto max-w-4xl px-5 py-16">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
-              {copy.relatedTitle}
-            </p>
-            <div className="mt-6 grid gap-4">
-              {relatedPosts.map((related) => (
-                <Link
-                  key={related.slug}
-                  href={`/${locale}/posts/${related.slug}`}
-                  className="rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] p-5 transition hover:border-emerald-300"
-                >
-                  <p className="text-sm text-emerald-700">
-                    {related.categoryName}
-                  </p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">
-                    {related.title}
-                  </p>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">
-                    {related.excerpt}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+      </div>
     </main>
   );
 }
