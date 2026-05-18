@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   categories as categoryTable,
   categoryTranslations,
@@ -144,7 +144,14 @@ async function queryPosts(locale: Locale) {
     .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
     .leftJoin(postTags, eq(postTags.postId, postTable.id))
     .leftJoin(tagTable, eq(tagTable.id, postTags.tagId))
-    .where(eq(postTranslations.locale, locale))
+    .where(
+      and(
+        eq(postTranslations.locale, locale),
+        eq(postTable.status, "published"),
+        isNull(postTable.deletedAt),
+        isNotNull(postTable.publishedAt)
+      )
+    )
     .groupBy(
       postTable.slug,
       postTable.featured,
@@ -189,7 +196,7 @@ export async function getLocalizedPosts(locale: Locale): Promise<LocalizedPost[]
     return rows.map((row) => ({
       ...row,
       coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
-      publishedAt: row.publishedAt.toISOString(),
+      publishedAt: row.publishedAt?.toISOString() ?? new Date().toISOString(),
       tags: Array.isArray(row.tags) ? row.tags : [],
     }));
   } catch {

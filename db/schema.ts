@@ -37,7 +37,9 @@ export const posts = pgTable("posts", {
     .references(() => categories.id, { onDelete: "restrict" }),
   featured: boolean("featured").notNull().default(false),
   coverImage: text("cover_image").notNull(),
-  publishedAt: timestamp("published_at").notNull(),
+  publishedAt: timestamp("published_at"),
+  status: varchar("status", { length: 32 }).notNull().default("published"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
