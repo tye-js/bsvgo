@@ -3,11 +3,43 @@ import { Locale } from "./i18n";
 export const categorySlugs = ["blockchain", "ai", "infrastructure"] as const;
 export type CategorySlug = (typeof categorySlugs)[number];
 
+export function isCategorySlug(slug: string): slug is CategorySlug {
+  return categorySlugs.includes(slug as CategorySlug);
+}
+
 export function slugifyTag(tag: string) {
-  return tag
+  const slug = tag
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .trim()
+    .normalize("NFKD")
+    .replace(/['’]/g, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
     .replace(/(^-|-$)/g, "");
+
+  return slug || encodeURIComponent(tag.trim()).toLowerCase();
+}
+
+export function tagToReference(tag: string) {
+  return {
+    slug: slugifyTag(tag),
+    name: tag,
+  };
+}
+
+export function getCategoryBySlug(slug: string) {
+  return categories.find((category) => category.slug === slug);
+}
+
+export function getPostBySlug(slug: string) {
+  return posts.find((post) => post.slug === slug);
+}
+
+export function getAllTagNames() {
+  return [...new Set(posts.flatMap((post) => post.tags))];
+}
+
+export function getAllTagSlugs() {
+  return getAllTagNames().map((tag) => slugifyTag(tag));
 }
 
 export type CategoryContent = {
@@ -295,19 +327,3 @@ export const posts: PostContent[] = [
     },
   },
 ];
-
-export function getCategoryBySlug(slug: string) {
-  return categories.find((category) => category.slug === slug);
-}
-
-export function getPostBySlug(slug: string) {
-  return posts.find((post) => post.slug === slug);
-}
-
-export function getAllTagNames() {
-  return [...new Set(posts.flatMap((post) => post.tags))];
-}
-
-export function getAllTagSlugs() {
-  return getAllTagNames().map((tag) => slugifyTag(tag));
-}

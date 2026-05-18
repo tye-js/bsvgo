@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { getLocalizedCategories, getLocalizedPosts } from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
-import { slugifyTag, type CategorySlug } from "@/lib/content";
+import { isCategorySlug, slugifyTag, type CategorySlug } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
@@ -48,12 +48,17 @@ const topicStyles = {
   },
 } as const;
 
+const defaultTopicStyle = topicStyles.infrastructure;
+
 type ShowcaseArticle = {
   title: string;
   excerpt: string;
   image: string;
   publishedAt: string;
-  tags: string[];
+  tags: {
+    slug: string;
+    name: string;
+  }[];
 };
 
 const topicShowcaseArticles = {
@@ -66,7 +71,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-12T09:00:00.000Z",
-        tags: ["Settlement", "Builders"],
+        tags: ["Settlement", "Builders"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Token Utility Without Dashboard Theater",
@@ -75,7 +83,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-09T09:00:00.000Z",
-        tags: ["Tokens", "Product"],
+        tags: ["Tokens", "Product"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Readable Chain Data for Operators",
@@ -84,7 +95,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-06T09:00:00.000Z",
-        tags: ["Data", "Operations"],
+        tags: ["Data", "Operations"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "BSV Notes for Long-Term Records",
@@ -93,7 +107,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-03T09:00:00.000Z",
-        tags: ["BSV", "Records"],
+        tags: ["BSV", "Records"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Wallet UX for Infrastructure Products",
@@ -102,7 +119,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-29T09:00:00.000Z",
-        tags: ["Wallets", "UX"],
+        tags: ["Wallets", "UX"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
     ai: [
@@ -113,7 +133,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-13T09:00:00.000Z",
-        tags: ["Guardrails", "Launch"],
+        tags: ["Guardrails", "Launch"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Model Routing for Lean Teams",
@@ -122,7 +145,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-10T09:00:00.000Z",
-        tags: ["Models", "Workflow"],
+        tags: ["Models", "Workflow"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Prompt Systems as Product Surface",
@@ -131,7 +157,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-07T09:00:00.000Z",
-        tags: ["Prompts", "Testing"],
+        tags: ["Prompts", "Testing"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Human Handoffs in AI Support Flows",
@@ -140,7 +169,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-04T09:00:00.000Z",
-        tags: ["Support", "Operations"],
+        tags: ["Support", "Operations"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Evaluation Sets Before New Features",
@@ -149,7 +181,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-28T09:00:00.000Z",
-        tags: ["Evaluation", "QA"],
+        tags: ["Evaluation", "QA"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
     infrastructure: [
@@ -160,7 +195,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-11T09:00:00.000Z",
-        tags: ["Servers", "Capacity"],
+        tags: ["Servers", "Capacity"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Home IP Patterns for Stable Access",
@@ -169,7 +207,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-08T09:00:00.000Z",
-        tags: ["Home IP", "Network"],
+        tags: ["Home IP", "Network"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Proxy Hygiene for Automation Teams",
@@ -178,7 +219,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-05T09:00:00.000Z",
-        tags: ["Proxies", "Automation"],
+        tags: ["Proxies", "Automation"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Observability for Builder Infrastructure",
@@ -187,7 +231,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-02T09:00:00.000Z",
-        tags: ["Monitoring", "Cost"],
+        tags: ["Monitoring", "Cost"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "Deployment Checklists for Small Teams",
@@ -196,7 +243,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-27T09:00:00.000Z",
-        tags: ["Deploy", "Ops"],
+        tags: ["Deploy", "Ops"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
   },
@@ -208,7 +258,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-12T09:00:00.000Z",
-        tags: ["结算", "建设者"],
+        tags: ["结算", "建设者"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "不依赖噱头界面的代币效用",
@@ -216,7 +269,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-09T09:00:00.000Z",
-        tags: ["代币", "产品"],
+        tags: ["代币", "产品"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "给运营团队看的链上数据",
@@ -224,7 +280,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-06T09:00:00.000Z",
-        tags: ["数据", "运营"],
+        tags: ["数据", "运营"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "面向长期记录的 BSV 观察",
@@ -232,7 +291,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-03T09:00:00.000Z",
-        tags: ["BSV", "记录"],
+        tags: ["BSV", "记录"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "基础设施产品里的钱包体验",
@@ -240,7 +302,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-29T09:00:00.000Z",
-        tags: ["钱包", "体验"],
+        tags: ["钱包", "体验"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
     ai: [
@@ -250,7 +315,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-13T09:00:00.000Z",
-        tags: ["护栏", "上线"],
+        tags: ["护栏", "上线"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "精简团队的模型路由策略",
@@ -258,7 +326,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-10T09:00:00.000Z",
-        tags: ["模型", "工作流"],
+        tags: ["模型", "工作流"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "把提示词系统当作产品表面",
@@ -266,7 +337,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-07T09:00:00.000Z",
-        tags: ["提示词", "测试"],
+        tags: ["提示词", "测试"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "AI 客服流程里的人工交接",
@@ -274,7 +348,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-04T09:00:00.000Z",
-        tags: ["客服", "运营"],
+        tags: ["客服", "运营"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "新功能之前先准备评测集",
@@ -282,7 +359,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-28T09:00:00.000Z",
-        tags: ["评测", "质量"],
+        tags: ["评测", "质量"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
     infrastructure: [
@@ -292,7 +372,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-11T09:00:00.000Z",
-        tags: ["服务器", "容量"],
+        tags: ["服务器", "容量"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "稳定访问所需的家宽 IP 模式",
@@ -300,7 +383,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-08T09:00:00.000Z",
-        tags: ["家宽 IP", "网络"],
+        tags: ["家宽 IP", "网络"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "自动化团队的代理卫生",
@@ -308,7 +394,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-05T09:00:00.000Z",
-        tags: ["代理", "自动化"],
+        tags: ["代理", "自动化"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "建设者基础设施的可观测性",
@@ -316,7 +405,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-05-02T09:00:00.000Z",
-        tags: ["监控", "成本"],
+        tags: ["监控", "成本"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
       {
         title: "小团队的部署检查清单",
@@ -324,7 +416,10 @@ const topicShowcaseArticles = {
         image:
           "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
         publishedAt: "2026-04-27T09:00:00.000Z",
-        tags: ["部署", "运维"],
+        tags: ["部署", "运维"].map((tag) => ({
+          slug: slugifyTag(tag),
+          name: tag,
+        })),
       },
     ],
   },
@@ -544,11 +639,11 @@ export async function HomePage({ locale }: { locale: Locale }) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     {(post.tags ?? []).slice(0, 2).map((tag) => (
                       <Link
-                        key={tag}
-                        href={`/${locale}/tag/${slugifyTag(tag)}`}
+                        key={tag.slug}
+                        href={`/${locale}/tag/${tag.slug}`}
                         className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
                       >
-                        {tag}
+                        {tag.name}
                       </Link>
                     ))}
                   </div>
@@ -560,7 +655,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
       </section>
 
       {categories.map((category) => {
-        const categorySlug = category.slug as CategorySlug;
+        const knownCategorySlug = isCategorySlug(category.slug)
+          ? category.slug
+          : null;
         const databaseSectionPosts = posts
           .filter((post) => post.categorySlug === category.slug)
           .slice(0, 5)
@@ -572,18 +669,22 @@ export async function HomePage({ locale }: { locale: Locale }) {
             tags: post.tags,
             href: `/${locale}/posts/${post.slug}`,
           }));
-        const fallbackSectionPosts = topicShowcaseArticles[locale][categorySlug].map(
-          (post) => ({
-            ...post,
-            href: null,
-          })
-        );
+        const fallbackSectionPosts = knownCategorySlug
+          ? topicShowcaseArticles[locale][knownCategorySlug].map((post) => ({
+              ...post,
+              href: null,
+            }))
+          : [];
         const sectionPosts =
           databaseSectionPosts.length > 0
             ? databaseSectionPosts
             : fallbackSectionPosts;
-        const Icon = sectionIcons[categorySlug];
-        const style = topicStyles[categorySlug];
+        const Icon = knownCategorySlug
+          ? sectionIcons[knownCategorySlug]
+          : ServerCog;
+        const style = knownCategorySlug
+          ? topicStyles[knownCategorySlug]
+          : defaultTopicStyle;
 
         return (
           <section
@@ -593,7 +694,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
             <div className="mx-auto max-w-7xl px-5">
               <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
                 <div className={`grid h-6 w-6 place-items-center rounded-md ${style.icon}`}>
-                    <Icon className="h-3 w-3" />
+                  <Icon className="h-3 w-3" />
                 </div>
                 <p
                   className={`truncate text-[11px] font-semibold uppercase tracking-[0.14em] ${style.eyebrow}`}
@@ -631,7 +732,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                               title: post.title,
                               label: category.name,
                               subtitle: post.excerpt,
-                              categorySlug,
+                              categorySlug: category.slug,
                               variant: "card",
                             })}
                             alt=""
@@ -643,7 +744,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                           <span
                             className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-900 ${style.accent}`}
                           >
-                            {post.tags[0] ?? category.name}
+                            {post.tags[0]?.name ?? category.name}
                           </span>
                         </div>
                       </Link>
@@ -654,7 +755,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                             title: post.title,
                             label: category.name,
                             subtitle: post.excerpt,
-                            categorySlug,
+                            categorySlug: category.slug,
                             variant: "card",
                           })}
                           alt=""
@@ -666,7 +767,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                         <span
                           className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-900 ${style.accent}`}
                         >
-                          {post.tags[0] ?? category.name}
+                          {post.tags[0]?.name ?? category.name}
                         </span>
                       </div>
                     )}
@@ -685,24 +786,24 @@ export async function HomePage({ locale }: { locale: Locale }) {
                         {post.excerpt}
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {post.tags.slice(1, 3).map((tag) => (
+                        {post.tags.slice(1, 3).map((tag) =>
                           post.href ? (
                             <Link
-                              key={tag}
-                              href={`/${locale}/tag/${slugifyTag(tag)}`}
+                              key={tag.slug}
+                              href={`/${locale}/tag/${tag.slug}`}
                               className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
                             >
-                              {tag}
+                              {tag.name}
                             </Link>
                           ) : (
                             <span
-                              key={tag}
+                              key={tag.slug}
                               className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600"
                             >
-                              {tag}
+                              {tag.name}
                             </span>
                           )
-                        ))}
+                        )}
                       </div>
                     </div>
                   </article>
@@ -728,14 +829,22 @@ export async function HomePage({ locale }: { locale: Locale }) {
               Tags
             </p>
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
-              {[...new Set(posts.flatMap((post) => post.tags))].slice(0, 8).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-md bg-emerald-50 px-3 py-1.5 text-emerald-700"
-                >
-                  {tag}
-                </span>
-              ))}
+              {[
+                ...new Map(
+                  posts
+                    .flatMap((post) => post.tags)
+                    .map((tag) => [tag.slug, tag])
+                ).values(),
+              ]
+                .slice(0, 8)
+                .map((tag) => (
+                  <span
+                    key={tag.slug}
+                    className="rounded-md bg-emerald-50 px-3 py-1.5 text-emerald-700"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
             </div>
           </div>
           <div className="rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] p-6">

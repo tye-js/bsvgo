@@ -13,13 +13,12 @@ import {
 } from "lucide-react";
 import {
   getLocalizedCategoryBySlug,
-  getLocalizedPosts,
+  getLocalizedPostsByCategorySlug,
   type LocalizedPost,
 } from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
 import {
-  getCategoryBySlug,
-  slugifyTag,
+  isCategorySlug,
   type CategorySlug,
 } from "@/lib/content";
 import { formatDate } from "@/lib/format";
@@ -75,6 +74,8 @@ const categoryStyles = {
   },
 } as const;
 
+const defaultCategoryStyle = categoryStyles.infrastructure;
+
 const categoryPageCopy = {
   en: {
     categoryLabel: "Category",
@@ -111,17 +112,15 @@ export async function generateMetadata({
     return {};
   }
 
-  const category = getCategoryBySlug(slug);
+  const category = await getLocalizedCategoryBySlug(locale, slug);
 
   if (!category) {
     return {};
   }
 
-  const translation = category.translations[locale];
-
   return {
-    title: translation.name,
-    description: translation.description,
+    title: category.name,
+    description: category.description,
     alternates: {
       canonical: `/${locale}/category/${slug}`,
       languages: {
@@ -130,8 +129,8 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: `${translation.name} | BSVgo`,
-      description: translation.description,
+      title: `${category.name} | BSVgo`,
+      description: category.description,
       url: `${siteConfig.url}/${locale}/category/${slug}`,
     },
   };
@@ -154,15 +153,16 @@ export default async function CategoryPage({
     notFound();
   }
 
-  const categorySlug = category.slug as CategorySlug;
+  const knownCategorySlug = isCategorySlug(category.slug) ? category.slug : null;
   const copy = uiCopy[locale];
   const pageCopy = categoryPageCopy[locale];
-  const allPosts = await getLocalizedPosts(locale);
-  const posts = allPosts.filter((post) => post.categorySlug === slug);
+  const posts = await getLocalizedPostsByCategorySlug(locale, slug);
   const featured = posts.find((post) => post.featured) ?? posts[0] ?? null;
   const latestDate = posts[0]?.publishedAt;
-  const Icon = sectionIcons[categorySlug] ?? ServerCog;
-  const style = categoryStyles[categorySlug];
+  const Icon = knownCategorySlug ? sectionIcons[knownCategorySlug] : ServerCog;
+  const style = knownCategorySlug
+    ? categoryStyles[knownCategorySlug]
+    : defaultCategoryStyle;
 
   return (
     <main className={`${style.page} text-slate-900`}>
@@ -382,11 +382,11 @@ function CategoryArticleCard({
           <div className="flex min-w-0 flex-wrap gap-2">
             {(post.tags ?? []).slice(0, 3).map((tag) => (
               <Link
-                key={tag}
-                href={`/${locale}/tag/${slugifyTag(tag)}`}
+                key={tag.slug}
+                href={`/${locale}/tag/${tag.slug}`}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${style.tag}`}
               >
-                {tag}
+                {tag.name}
               </Link>
             ))}
           </div>

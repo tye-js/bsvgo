@@ -1,5 +1,7 @@
 import postgres from "postgres";
 
+// One-time production repair helper kept for historical recovery only.
+// Do not use this for routine migration work.
 async function main() {
   const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
 

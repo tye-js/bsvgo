@@ -8,9 +8,11 @@ export const localeLabels: Record<Locale, string> = {
   zh: "中文",
 };
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://bsvgo.com";
+
 export const siteConfig = {
   name: "BSVgo",
-  url: "https://bsvgo.com",
+  url: siteUrl,
   description:
     "BSVgo is a multilingual tech blog about blockchain, AI, and infrastructure.",
 };

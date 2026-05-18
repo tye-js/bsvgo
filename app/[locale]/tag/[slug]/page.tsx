@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article-card";
-import { getLocalizedPosts, getLocalizedTags } from "@/lib/blog";
-import { slugifyTag } from "@/lib/content";
-import { Locale, locales, uiCopy } from "@/lib/i18n";
+import {
+  getLocalizedPostsByTagSlug,
+  getLocalizedTagBySlug,
+} from "@/lib/blog";
+import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +20,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const tags = await getLocalizedTags(locale);
-  const tag = tags.find((item) => item.slug === slug);
-  const copy = uiCopy[locale];
+  const tag = await getLocalizedTagBySlug(locale, slug);
 
   if (!tag) {
     return {};
@@ -29,6 +29,18 @@ export async function generateMetadata({
   return {
     title: tag.name,
     description: `Posts tagged with ${tag.name} on BSVgo.`,
+    alternates: {
+      canonical: `/${locale}/tag/${slug}`,
+      languages: {
+        en: `/en/tag/${slug}`,
+        zh: `/zh/tag/${slug}`,
+      },
+    },
+    openGraph: {
+      title: `${tag.name} | BSVgo`,
+      description: `Posts tagged with ${tag.name} on BSVgo.`,
+      url: `${siteConfig.url}/${locale}/tag/${slug}`,
+    },
   };
 }
 
@@ -43,17 +55,14 @@ export default async function TagPage({
     notFound();
   }
 
-  const tags = await getLocalizedTags(locale);
-  const tag = tags.find((item) => item.slug === slug);
+  const tag = await getLocalizedTagBySlug(locale, slug);
   const copy = uiCopy[locale];
 
   if (!tag) {
     notFound();
   }
 
-  const posts = (await getLocalizedPosts(locale)).filter((post) =>
-    (post.tags ?? []).map(slugifyTag).includes(slug)
-  );
+  const posts = await getLocalizedPostsByTagSlug(locale, slug);
 
   return (
     <main className="bg-[rgb(249,251,250)]">

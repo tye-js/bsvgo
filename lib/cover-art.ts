@@ -54,6 +54,8 @@ const palettes: Record<string, Palette> = {
   },
 };
 
+const renderableRemoteHosts = new Set(["images.unsplash.com", "cms.bsvgo.com"]);
+
 function escapeXml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -213,9 +215,15 @@ export function getRenderableImageSrc(
     return value;
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  try {
+    const url = new URL(value);
+
+    if (url.protocol === "https:" && renderableRemoteHosts.has(url.hostname)) {
+      return value;
+    }
+  } catch {
     return createCoverArtDataUri(options);
   }
 
-  return value;
+  return createCoverArtDataUri(options);
 }

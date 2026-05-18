@@ -1,20 +1,30 @@
 import type { MetadataRoute } from "next";
-import { categorySlugs, getAllTagSlugs, posts } from "@/lib/content";
+import {
+  getLocalizedCategories,
+  getLocalizedPosts,
+  getLocalizedTags,
+} from "@/lib/blog";
 import { locales, siteConfig } from "@/lib/i18n";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteConfig.url;
   const routes: MetadataRoute.Sitemap = [];
 
   for (const locale of locales) {
+    const [categories, posts, tags] = await Promise.all([
+      getLocalizedCategories(locale),
+      getLocalizedPosts(locale),
+      getLocalizedTags(locale),
+    ]);
+
     routes.push({
       url: `${base}/${locale}`,
       lastModified: new Date(),
     });
 
-    for (const slug of categorySlugs) {
+    for (const category of categories) {
       routes.push({
-        url: `${base}/${locale}/category/${slug}`,
+        url: `${base}/${locale}/category/${category.slug}`,
         lastModified: new Date(),
       });
     }
@@ -26,9 +36,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       });
     }
 
-    for (const tag of getAllTagSlugs()) {
+    for (const tag of tags) {
       routes.push({
-        url: `${base}/${locale}/tag/${tag}`,
+        url: `${base}/${locale}/tag/${tag.slug}`,
         lastModified: new Date(),
       });
     }

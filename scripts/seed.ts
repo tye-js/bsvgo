@@ -8,7 +8,7 @@ import {
   postTranslations,
   tags as tagTable,
 } from "../db/schema";
-import { categories, posts } from "../lib/content";
+import { categories, posts, slugifyTag } from "../lib/content";
 
 async function main() {
   for (const category of categories) {
@@ -91,10 +91,7 @@ async function main() {
     }
 
     for (const name of post.tags) {
-      const slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      const slug = slugifyTag(name);
 
       let tagId = tagRows.get(slug);
 

@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
-import { slugifyTag } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
@@ -98,11 +97,11 @@ export default async function PostPage({
                 <div className="mt-5 flex flex-wrap gap-2">
                   {(post.tags ?? []).map((tag) => (
                     <Link
-                      key={tag}
-                      href={`/${locale}/tag/${slugifyTag(tag)}`}
+                      key={tag.slug}
+                      href={`/${locale}/tag/${tag.slug}`}
                       className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
                     >
-                      {tag}
+                      {tag.name}
                     </Link>
                   ))}
                 </div>

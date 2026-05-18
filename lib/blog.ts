@@ -1,4 +1,15 @@
-import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { cache } from "react";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  isNotNull,
+  isNull,
+  ne,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import {
   categories as categoryTable,
   categoryTranslations,
@@ -8,17 +19,22 @@ import {
   tags as tagTable,
 } from "@/db/schema";
 import {
-  CategorySlug,
-  categories,
   getCategoryBySlug,
-  posts,
+  posts as fallbackPostContent,
+  categories as fallbackCategoryContent,
+  tagToReference,
 } from "./content";
 import { Locale } from "./i18n";
 
 export type LocalizedCategory = {
-  slug: CategorySlug;
+  slug: string;
   name: string;
   description: string;
+};
+
+export type LocalizedTagReference = {
+  slug: string;
+  name: string;
 };
 
 export type LocalizedPost = {
@@ -26,7 +42,7 @@ export type LocalizedPost = {
   featured: boolean;
   coverImage: string;
   publishedAt: string;
-  categorySlug: CategorySlug | string;
+  categorySlug: string;
   categoryName: string;
   title: string;
   excerpt: string;
@@ -34,22 +50,42 @@ export type LocalizedPost = {
   readingMinutes: number;
   seoTitle: string;
   seoDescription: string;
-  tags: string[];
+  tags: LocalizedTagReference[];
 };
 
-export type LocalizedTag = {
-  slug: string;
-  name: string;
+export type LocalizedPostWithNeighbors = LocalizedPost & {
+  previous: LocalizedPost | null;
+  next: LocalizedPost | null;
+};
+
+export type LocalizedTag = LocalizedTagReference & {
   count: number;
 };
 
 const fallbackCoverImages: Record<string, string> = {
   blockchain:
     "https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&fit=crop&w=1600&q=80",
-  ai:
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80",
+  ai: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1600&q=80",
   infrastructure:
     "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80",
+};
+
+type RawPostRow = Omit<LocalizedPost, "publishedAt" | "tags" | "coverImage"> & {
+  coverImage: string | null;
+  publishedAt: Date | null;
+  tags: unknown;
+};
+
+type PostQueryOptions = {
+  slug?: string;
+  categorySlug?: string;
+  tagSlug?: string;
+  excludeSlug?: string;
+  featured?: boolean;
+  afterPublishedAt?: Date;
+  beforePublishedAt?: Date;
+  sort?: "newest" | "oldest";
+  limit?: number;
 };
 
 function normalizeCoverImage(
@@ -65,15 +101,70 @@ function normalizeCoverImage(
   return fallbackCoverImages[categorySlug] ?? fallbackCoverImages.infrastructure;
 }
 
+function normalizeTags(value: unknown): LocalizedTagReference[] {
+  const parsed =
+    typeof value === "string"
+      ? safeJsonParse<unknown>(value, [])
+      : Array.isArray(value)
+        ? value
+        : [];
+  const source = Array.isArray(parsed) ? parsed : [];
+
+  return source
+    .map((tag) => {
+      if (
+        tag &&
+        typeof tag === "object" &&
+        "slug" in tag &&
+        "name" in tag &&
+        typeof tag.slug === "string" &&
+        typeof tag.name === "string"
+      ) {
+        return {
+          slug: tag.slug,
+          name: tag.name,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean) as LocalizedTagReference[];
+}
+
+function safeJsonParse<T>(value: string, fallback: T): T {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function logDatabaseFallback(scope: string, error: unknown) {
+  console.error(`[bsvgo] Database read failed for ${scope}; using seed content.`, error);
+}
+
+function getFallbackCategory(locale: Locale, slug: string) {
+  const category = getCategoryBySlug(slug);
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    slug: category.slug,
+    ...category.translations[locale],
+  };
+}
+
 export function getFallbackCategories(locale: Locale): LocalizedCategory[] {
-  return categories.map((category) => ({
+  return fallbackCategoryContent.map((category) => ({
     slug: category.slug,
     ...category.translations[locale],
   }));
 }
 
 export function getFallbackPosts(locale: Locale): LocalizedPost[] {
-  return posts
+  return fallbackPostContent
     .map((post) => {
       const category = getCategoryBySlug(post.categorySlug);
 
@@ -88,11 +179,45 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
         publishedAt: post.publishedAt,
         categorySlug: post.categorySlug,
         categoryName: category.translations[locale].name,
-        tags: post.tags,
+        tags: post.tags.map(tagToReference),
         ...post.translations[locale],
       };
     })
     .filter(Boolean) as LocalizedPost[];
+}
+
+function getFallbackTags(locale: Locale): LocalizedTag[] {
+  const counts = new Map<string, LocalizedTag>();
+
+  for (const post of getFallbackPosts(locale)) {
+    for (const tag of post.tags) {
+      const current = counts.get(tag.slug);
+      counts.set(tag.slug, {
+        ...tag,
+        count: (current?.count ?? 0) + 1,
+      });
+    }
+  }
+
+  return [...counts.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function mapPostRow(row: RawPostRow): LocalizedPost {
+  return {
+    ...row,
+    coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
+    publishedAt: row.publishedAt?.toISOString() ?? new Date().toISOString(),
+    tags: normalizeTags(row.tags),
+  };
+}
+
+function publishedPostConditions(locale: Locale): SQL[] {
+  return [
+    eq(postTranslations.locale, locale),
+    eq(postTable.status, "published"),
+    isNull(postTable.deletedAt),
+    isNotNull(postTable.publishedAt),
+  ];
 }
 
 async function queryCategories(locale: Locale) {
@@ -113,10 +238,64 @@ async function queryCategories(locale: Locale) {
     .orderBy(asc(categoryTranslations.name));
 }
 
-async function queryPosts(locale: Locale) {
+async function queryCategoryBySlug(locale: Locale, slug: string) {
   const { db } = await import("@/db");
 
   return db
+    .select({
+      slug: categoryTable.slug,
+      name: categoryTranslations.name,
+      description: categoryTranslations.description,
+    })
+    .from(categoryTable)
+    .innerJoin(
+      categoryTranslations,
+      eq(categoryTranslations.categoryId, categoryTable.id)
+    )
+    .where(and(eq(categoryTranslations.locale, locale), eq(categoryTable.slug, slug)))
+    .limit(1);
+}
+
+async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
+  const { db } = await import("@/db");
+  const conditions = publishedPostConditions(locale);
+
+  if (options.slug) {
+    conditions.push(eq(postTable.slug, options.slug));
+  }
+
+  if (options.categorySlug) {
+    conditions.push(eq(categoryTable.slug, options.categorySlug));
+  }
+
+  if (options.tagSlug) {
+    conditions.push(sql`exists (
+      select 1
+      from "post_tags" as "filter_post_tags"
+      inner join "tags" as "filter_tags"
+        on "filter_tags"."id" = "filter_post_tags"."tag_id"
+      where "filter_post_tags"."post_id" = ${postTable.id}
+        and "filter_tags"."slug" = ${options.tagSlug}
+    )`);
+  }
+
+  if (options.excludeSlug) {
+    conditions.push(ne(postTable.slug, options.excludeSlug));
+  }
+
+  if (typeof options.featured === "boolean") {
+    conditions.push(eq(postTable.featured, options.featured));
+  }
+
+  if (options.afterPublishedAt) {
+    conditions.push(sql`${postTable.publishedAt} > ${options.afterPublishedAt}`);
+  }
+
+  if (options.beforePublishedAt) {
+    conditions.push(sql`${postTable.publishedAt} < ${options.beforePublishedAt}`);
+  }
+
+  const query = db
     .select({
       slug: postTable.slug,
       featured: postTable.featured,
@@ -124,7 +303,15 @@ async function queryPosts(locale: Locale) {
       publishedAt: postTable.publishedAt,
       categorySlug: categoryTable.slug,
       categoryName: categoryTranslations.name,
-      tags: sql<string[]>`coalesce(array_remove(array_agg(distinct ${tagTable.name}), null), '{}'::text[])`,
+      tags: sql<LocalizedTagReference[]>`coalesce(
+        jsonb_agg(
+          distinct jsonb_build_object(
+            'slug', ${tagTable.slug},
+            'name', ${tagTable.name}
+          )
+        ) filter (where ${tagTable.id} is not null),
+        '[]'::jsonb
+      )`,
       title: postTranslations.title,
       excerpt: postTranslations.excerpt,
       content: postTranslations.content,
@@ -144,15 +331,9 @@ async function queryPosts(locale: Locale) {
     .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
     .leftJoin(postTags, eq(postTags.postId, postTable.id))
     .leftJoin(tagTable, eq(tagTable.id, postTags.tagId))
-    .where(
-      and(
-        eq(postTranslations.locale, locale),
-        eq(postTable.status, "published"),
-        isNull(postTable.deletedAt),
-        isNotNull(postTable.publishedAt)
-      )
-    )
+    .where(and(...conditions))
     .groupBy(
+      postTable.id,
       postTable.slug,
       postTable.featured,
       postTable.coverImage,
@@ -166,136 +347,260 @@ async function queryPosts(locale: Locale) {
       postTranslations.seoTitle,
       postTranslations.seoDescription
     )
-    .orderBy(desc(postTable.publishedAt));
-}
+    .orderBy(
+      options.sort === "oldest"
+        ? asc(postTable.publishedAt)
+        : desc(postTable.publishedAt)
+    )
+    .$dynamic();
 
-export async function getLocalizedCategories(
-  locale: Locale
-): Promise<LocalizedCategory[]> {
-  try {
-    const rows = await queryCategories(locale);
-    return rows.length > 0
-      ? rows.map((row) => ({ ...row, slug: row.slug as CategorySlug }))
-      : getFallbackCategories(locale);
-  } catch {
-    return getFallbackCategories(locale);
+  if (options.limit) {
+    return query.limit(options.limit);
   }
+
+  return query;
 }
 
-export async function getLocalizedCategoryBySlug(
-  locale: Locale,
-  slug: string
-): Promise<LocalizedCategory | null> {
-  const categories = await getLocalizedCategories(locale);
-  return categories.find((category) => category.slug === slug) ?? null;
+async function queryTags(locale: Locale) {
+  const { db } = await import("@/db");
+
+  return db
+    .select({
+      slug: tagTable.slug,
+      name: tagTable.name,
+      count: sql<number>`count(distinct ${postTable.id})::int`,
+    })
+    .from(tagTable)
+    .innerJoin(postTags, eq(postTags.tagId, tagTable.id))
+    .innerJoin(postTable, eq(postTable.id, postTags.postId))
+    .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
+    .where(and(...publishedPostConditions(locale)))
+    .groupBy(tagTable.id, tagTable.slug, tagTable.name)
+    .orderBy(asc(tagTable.name));
 }
 
-export async function getLocalizedPosts(locale: Locale): Promise<LocalizedPost[]> {
-  try {
-    const rows = await queryPosts(locale);
-    return rows.map((row) => ({
-      ...row,
-      coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
-      publishedAt: row.publishedAt?.toISOString() ?? new Date().toISOString(),
-      tags: Array.isArray(row.tags) ? row.tags : [],
-    }));
-  } catch {
-    return getFallbackPosts(locale);
+async function queryTagBySlug(locale: Locale, slug: string) {
+  const { db } = await import("@/db");
+
+  return db
+    .select({
+      slug: tagTable.slug,
+      name: tagTable.name,
+      count: sql<number>`count(distinct ${postTable.id})::int`,
+    })
+    .from(tagTable)
+    .innerJoin(postTags, eq(postTags.tagId, tagTable.id))
+    .innerJoin(postTable, eq(postTable.id, postTags.postId))
+    .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
+    .where(and(eq(tagTable.slug, slug), ...publishedPostConditions(locale)))
+    .groupBy(tagTable.id, tagTable.slug, tagTable.name)
+    .limit(1);
+}
+
+export const getLocalizedCategories = cache(
+  async (locale: Locale): Promise<LocalizedCategory[]> => {
+    try {
+      return await queryCategories(locale);
+    } catch (error) {
+      logDatabaseFallback(`categories:${locale}`, error);
+      return getFallbackCategories(locale);
+    }
   }
-}
+);
 
-export async function getFeaturedPost(locale: Locale) {
-  const localizedPosts = await getLocalizedPosts(locale);
-  return localizedPosts.find((post) => post.featured) ?? null;
-}
+export const getLocalizedCategoryBySlug = cache(
+  async (locale: Locale, slug: string): Promise<LocalizedCategory | null> => {
+    try {
+      const [category] = await queryCategoryBySlug(locale, slug);
+      return category ?? null;
+    } catch (error) {
+      logDatabaseFallback(`category:${locale}:${slug}`, error);
+      return getFallbackCategory(locale, slug);
+    }
+  }
+);
 
-export async function getLocalizedTags(locale: Locale): Promise<LocalizedTag[]> {
+export const getLocalizedPosts = cache(
+  async (locale: Locale): Promise<LocalizedPost[]> => {
+    try {
+      return (await queryPosts(locale)).map(mapPostRow);
+    } catch (error) {
+      logDatabaseFallback(`posts:${locale}`, error);
+      return getFallbackPosts(locale);
+    }
+  }
+);
+
+export const getLocalizedPostBySlug = cache(
+  async (locale: Locale, slug: string): Promise<LocalizedPost | null> => {
+    try {
+      const [post] = await queryPosts(locale, { slug, limit: 1 });
+      return post ? mapPostRow(post) : null;
+    } catch (error) {
+      logDatabaseFallback(`post:${locale}:${slug}`, error);
+      return getFallbackPosts(locale).find((post) => post.slug === slug) ?? null;
+    }
+  }
+);
+
+export const getLocalizedPostsByCategorySlug = cache(
+  async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
+    try {
+      return (await queryPosts(locale, { categorySlug: slug })).map(mapPostRow);
+    } catch (error) {
+      logDatabaseFallback(`category-posts:${locale}:${slug}`, error);
+      return getFallbackPosts(locale).filter((post) => post.categorySlug === slug);
+    }
+  }
+);
+
+export const getLocalizedPostsByTagSlug = cache(
+  async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
+    try {
+      return (await queryPosts(locale, { tagSlug: slug })).map(mapPostRow);
+    } catch (error) {
+      logDatabaseFallback(`tag-posts:${locale}:${slug}`, error);
+      return getFallbackPosts(locale).filter((post) =>
+        post.tags.some((tag) => tag.slug === slug)
+      );
+    }
+  }
+);
+
+export const getFeaturedPost = cache(async (locale: Locale) => {
   try {
-    const posts = await getLocalizedPosts(locale);
-    const counts = new Map<string, { name: string; count: number }>();
+    const [post] = await queryPosts(locale, { featured: true, limit: 1 });
+    return post ? mapPostRow(post) : null;
+  } catch (error) {
+    logDatabaseFallback(`featured:${locale}`, error);
+    return getFallbackPosts(locale).find((post) => post.featured) ?? null;
+  }
+});
 
-    for (const post of posts) {
-      for (const tag of post.tags ?? []) {
-        const slug = tag
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
+export const getLocalizedTags = cache(
+  async (locale: Locale): Promise<LocalizedTag[]> => {
+    try {
+      return await queryTags(locale);
+    } catch (error) {
+      logDatabaseFallback(`tags:${locale}`, error);
+      return getFallbackTags(locale);
+    }
+  }
+);
 
-        const current = counts.get(slug);
-        counts.set(slug, {
-          name: current?.name ?? tag,
-          count: (current?.count ?? 0) + 1,
-        });
-      }
+export const getLocalizedTagBySlug = cache(
+  async (locale: Locale, slug: string): Promise<LocalizedTag | null> => {
+    try {
+      const [tag] = await queryTagBySlug(locale, slug);
+      return tag ?? null;
+    } catch (error) {
+      logDatabaseFallback(`tag:${locale}:${slug}`, error);
+      return getFallbackTags(locale).find((tag) => tag.slug === slug) ?? null;
+    }
+  }
+);
+
+export const getRelatedPosts = cache(
+  async (locale: Locale, slug: string, limit = 3) => {
+    const current = await getLocalizedPostBySlug(locale, slug);
+
+    if (!current) {
+      return [];
     }
 
-    return [...counts.entries()].map(([slug, value]) => ({
-      slug,
-      name: value.name,
-      count: value.count,
-    }));
-  } catch {
-    return [];
+    try {
+      const candidates = (
+        await queryPosts(locale, {
+          excludeSlug: slug,
+          categorySlug: current.categorySlug,
+          limit: Math.max(limit * 3, limit),
+        })
+      ).map(mapPostRow);
+      const tagSlugs = new Set(current.tags.map((tag) => tag.slug));
+      const scored = candidates
+        .map((post) => {
+          const sharedTags = post.tags.filter((tag) => tagSlugs.has(tag.slug)).length;
+          const sharedCategory = post.categorySlug === current.categorySlug ? 1 : 0;
+          const featuredBoost = post.featured ? 1 : 0;
+
+          return {
+            post,
+            score: sharedTags * 3 + sharedCategory * 2 + featuredBoost,
+          };
+        })
+        .filter((entry) => entry.score > 0)
+        .sort(
+          (a, b) =>
+            b.score - a.score ||
+            b.post.publishedAt.localeCompare(a.post.publishedAt)
+        )
+        .slice(0, limit)
+        .map((entry) => entry.post);
+
+      if (scored.length > 0) {
+        return scored;
+      }
+
+      return (
+        await queryPosts(locale, {
+          excludeSlug: slug,
+          limit,
+        })
+      ).map(mapPostRow);
+    } catch (error) {
+      logDatabaseFallback(`related:${locale}:${slug}`, error);
+    }
+
+    return getFallbackPosts(locale)
+      .filter((post) => post.slug !== slug)
+      .slice(0, limit);
   }
-}
+);
 
-export async function getRelatedPosts(
-  locale: Locale,
-  slug: string,
-  limit = 3
-) {
-  const localizedPosts = await getLocalizedPosts(locale);
-  const current = localizedPosts.find((post) => post.slug === slug);
+export const getPostData = cache(
+  async (
+    locale: Locale,
+    slug: string
+  ): Promise<LocalizedPostWithNeighbors | null> => {
+    const post = await getLocalizedPostBySlug(locale, slug);
 
-  if (!current) {
-    return [];
-  }
+    if (!post) {
+      return null;
+    }
 
-  const scored = localizedPosts
-    .filter((post) => post.slug !== slug)
-    .map((post) => {
-      const sharedTags = (post.tags ?? []).filter((tag) =>
-        (current.tags ?? []).includes(tag)
-      ).length;
-
-      const sharedCategory = post.categorySlug === current.categorySlug ? 1 : 0;
-      const featuredBoost = post.featured ? 1 : 0;
+    try {
+      const publishedAt = new Date(post.publishedAt);
+      const [[previous], [next]] = await Promise.all([
+        queryPosts(locale, {
+          afterPublishedAt: publishedAt,
+          sort: "oldest",
+          limit: 1,
+        }),
+        queryPosts(locale, {
+          beforePublishedAt: publishedAt,
+          sort: "newest",
+          limit: 1,
+        }),
+      ]);
 
       return {
-        post,
-        score: sharedTags * 3 + sharedCategory * 2 + featuredBoost,
+        ...post,
+        previous: previous ? mapPostRow(previous) : null,
+        next: next ? mapPostRow(next) : null,
       };
-    })
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score || b.post.publishedAt.localeCompare(a.post.publishedAt))
-    .slice(0, limit)
-    .map((entry) => entry.post);
+    } catch (error) {
+      logDatabaseFallback(`post-neighbors:${locale}:${slug}`, error);
+      const localizedPosts = getFallbackPosts(locale);
+      const currentIndex = localizedPosts.findIndex((item) => item.slug === slug);
 
-  if (scored.length > 0) {
-    return scored;
+      return {
+        ...post,
+        previous: currentIndex > 0 ? localizedPosts[currentIndex - 1] : null,
+        next:
+          currentIndex >= 0 && currentIndex < localizedPosts.length - 1
+            ? localizedPosts[currentIndex + 1]
+            : null,
+      };
+    }
   }
-
-  return localizedPosts
-    .filter((post) => post.slug !== slug)
-    .slice(0, limit);
-}
-
-export async function getPostData(locale: Locale, slug: string) {
-  const localizedPosts = await getLocalizedPosts(locale);
-  const post = localizedPosts.find((item) => item.slug === slug);
-
-  if (!post) {
-    return null;
-  }
-
-  const currentIndex = localizedPosts.findIndex((item) => item.slug === slug);
-
-  return {
-    ...post,
-    previous: currentIndex > 0 ? localizedPosts[currentIndex - 1] : null,
-    next:
-      currentIndex < localizedPosts.length - 1
-        ? localizedPosts[currentIndex + 1]
-        : null,
-  };
-}
+);

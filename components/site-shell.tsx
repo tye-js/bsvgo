@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { Mail, MessageCircle, Rss, Send } from "lucide-react";
-import {
-  categorySlugs,
-  getCategoryBySlug,
-} from "@/lib/content";
+import { getLocalizedCategories } from "@/lib/blog";
 import { Locale, uiCopy } from "@/lib/i18n";
 import { BrandLogo } from "@/components/brand-logo";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -14,27 +11,18 @@ type SiteShellProps = {
   children: React.ReactNode;
 };
 
-export function SiteShell({ locale, children }: SiteShellProps) {
+export async function SiteShell({ locale, children }: SiteShellProps) {
   const copy = uiCopy[locale];
+  const categories = await getLocalizedCategories(locale);
   const navItems = [
     {
       href: `/${locale}`,
       label: copy.navHome,
     },
-    ...categorySlugs.flatMap((slug) => {
-      const category = getCategoryBySlug(slug);
-
-      if (!category) {
-        return [];
-      }
-
-      return [
-        {
-          href: `/${locale}/category/${slug}`,
-          label: category.translations[locale].name,
-        },
-      ];
-    }),
+    ...categories.map((category) => ({
+      href: `/${locale}/category/${category.slug}`,
+      label: category.name,
+    })),
     {
       href: `/${locale}#latest`,
       label: copy.navLatest,
@@ -90,19 +78,14 @@ export function SiteShell({ locale, children }: SiteShellProps) {
             </p>
             <div className="mt-4 flex flex-col gap-3 text-sm text-slate-700">
               <Link href={`/${locale}`}>{copy.navHome}</Link>
-              {categorySlugs.map((slug) => {
-                const category = getCategoryBySlug(slug);
-
-                if (!category) {
-                  return null;
-                }
-
-                return (
-                  <Link key={slug} href={`/${locale}/category/${slug}`}>
-                    {category.translations[locale].name}
-                  </Link>
-                );
-              })}
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/${locale}/category/${category.slug}`}
+                >
+                  {category.name}
+                </Link>
+              ))}
               <Link href={`/${locale}#latest`}>{copy.navLatest}</Link>
             </div>
           </div>
