@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { buildAnalyticsAttrs } from "@/lib/analytics";
 import { localeLabels, Locale, locales } from "@/lib/i18n";
 
 type LocaleSwitcherProps = {
@@ -42,6 +43,12 @@ export function LocaleSwitcher({ locale, className = "" }: LocaleSwitcherProps) 
         <Link
           key={item}
           href={getLocaleHref(pathname, item, suffix)}
+          {...buildAnalyticsAttrs({
+            eventName: "locale_switch",
+            label: localeLabels[item],
+            href: getLocaleHref(pathname, item, suffix),
+            targetType: "locale",
+          })}
           aria-current={item === locale ? "page" : undefined}
           className={
             item === locale

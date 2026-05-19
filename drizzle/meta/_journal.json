@@ -22,6 +22,13 @@
       "when": 1779087000000,
       "tag": "0002_posts_publication_state",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779168206000,
+      "tag": "0003_analytics_events",
+      "breakpoints": true
     }
   ]
 }

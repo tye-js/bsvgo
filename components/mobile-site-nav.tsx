@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { buildAnalyticsAttrs } from "@/lib/analytics";
 import { Locale } from "@/lib/i18n";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
@@ -43,6 +44,12 @@ export function MobileSiteNav({ locale, navItems }: MobileSiteNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                {...buildAnalyticsAttrs({
+                  eventName: "nav_click",
+                  label: item.label,
+                  href: item.href,
+                  targetType: "nav",
+                })}
                 onClick={() => setIsOpen(false)}
                 className="rounded-md px-3 py-2.5 transition hover:bg-emerald-50 hover:text-emerald-700"
               >

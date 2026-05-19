@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/article-card";
+import { buildSectionViewAttrs } from "@/lib/analytics";
 import {
   getLocalizedPostsByTagSlug,
   getLocalizedTagBySlug,
@@ -66,7 +67,7 @@ export default async function TagPage({
 
   return (
     <main className="bg-[rgb(249,251,250)]">
-      <section className="px-5 py-16">
+      <section className="px-5 py-16" {...buildSectionViewAttrs(`tag-hero-${slug}`)}>
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
             {copy.tagArchiveTitle}
@@ -79,7 +80,10 @@ export default async function TagPage({
           </p>
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-5 pb-16">
+      <section
+        className="mx-auto max-w-7xl px-5 pb-16"
+        {...buildSectionViewAttrs(`tag-articles-${slug}`)}
+      >
         {posts.map((post) => (
           <ArticleCard key={post.slug} locale={locale} post={post} />
         ))}

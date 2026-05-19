@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { buildAnalyticsAttrs } from "@/lib/analytics";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
 
@@ -29,6 +30,13 @@ export function ArticleCard({ locale, post }: ArticleCardProps) {
         <div className="text-sm text-slate-500">
           <Link
             href={`/${locale}/category/${post.categorySlug}`}
+            {...buildAnalyticsAttrs({
+              eventName: "category_click",
+              label: post.categoryName,
+              href: `/${locale}/category/${post.categorySlug}`,
+              categorySlug: post.categorySlug,
+              targetType: "category",
+            })}
             className="font-semibold text-emerald-700"
           >
             {post.categoryName}
@@ -37,7 +45,19 @@ export function ArticleCard({ locale, post }: ArticleCardProps) {
         </div>
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-            <Link href={`/${locale}/posts/${post.slug}`}>{post.title}</Link>
+            <Link
+              href={`/${locale}/posts/${post.slug}`}
+              {...buildAnalyticsAttrs({
+                eventName: "article_click",
+                label: post.title,
+                href: `/${locale}/posts/${post.slug}`,
+                articleSlug: post.slug,
+                categorySlug: post.categorySlug,
+                targetType: "article",
+              })}
+            >
+              {post.title}
+            </Link>
           </h2>
           <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
             {post.excerpt}
@@ -50,6 +70,13 @@ export function ArticleCard({ locale, post }: ArticleCardProps) {
               <Link
                 key={tag.slug}
                 href={`/${locale}/tag/${tag.slug}`}
+                {...buildAnalyticsAttrs({
+                  eventName: "tag_click",
+                  label: tag.name,
+                  href: `/${locale}/tag/${tag.slug}`,
+                  tagSlug: tag.slug,
+                  targetType: "tag",
+                })}
                 className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
               >
                 {tag.name}
@@ -59,6 +86,14 @@ export function ArticleCard({ locale, post }: ArticleCardProps) {
         </div>
         <Link
           href={`/${locale}/posts/${post.slug}`}
+          {...buildAnalyticsAttrs({
+            eventName: "article_click",
+            label: post.title,
+            href: `/${locale}/posts/${post.slug}`,
+            articleSlug: post.slug,
+            categorySlug: post.categorySlug,
+            targetType: "article",
+          })}
           aria-label={`${copy.readMore}: ${post.title}`}
           className="grid h-11 w-11 place-items-center rounded-md border border-teal-900/10 text-slate-700 transition group-hover:border-emerald-400 group-hover:text-emerald-700"
         >

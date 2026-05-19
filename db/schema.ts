@@ -1,6 +1,8 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  index,
+  jsonb,
   integer,
   pgTable,
   primaryKey,
@@ -63,6 +65,40 @@ export const postTags = pgTable(
   (table) => [primaryKey({ columns: [table.postId, table.tagId] })]
 );
 
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventName: varchar("event_name", { length: 64 }).notNull(),
+    visitorId: varchar("visitor_id", { length: 64 }).notNull(),
+    sessionId: varchar("session_id", { length: 64 }).notNull(),
+    locale: varchar("locale", { length: 8 }),
+    path: text("path").notNull(),
+    referrer: text("referrer"),
+    href: text("href"),
+    label: text("label"),
+    targetType: varchar("target_type", { length: 32 }),
+    section: varchar("section", { length: 64 }),
+    articleSlug: varchar("article_slug", { length: 160 }),
+    categorySlug: varchar("category_slug", { length: 64 }),
+    tagSlug: varchar("tag_slug", { length: 80 }),
+    value: integer("value"),
+    payload: jsonb("payload").notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("analytics_events_event_created_idx").on(
+      table.eventName,
+      table.createdAt
+    ),
+    index("analytics_events_path_created_idx").on(table.path, table.createdAt),
+    index("analytics_events_session_created_idx").on(
+      table.sessionId,
+      table.createdAt
+    ),
+  ]
+);
+
 export const postTranslations = pgTable("post_translations", {
   id: uuid("id").defaultRandom().primaryKey(),
   postId: uuid("post_id")
@@ -112,3 +148,4 @@ export type Post = typeof posts.$inferSelect;
 export type PostTranslation = typeof postTranslations.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type PostTag = typeof postTags.$inferSelect;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;

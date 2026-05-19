@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Compass } from "lucide-react";
+import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { Locale, uiCopy } from "@/lib/i18n";
 
 type NotFoundContentProps = {
@@ -11,7 +12,10 @@ export function NotFoundContent({ locale }: NotFoundContentProps) {
 
   return (
     <main className="bg-[rgb(249,251,250)] px-5 py-16 text-slate-900 md:py-24">
-      <section className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[1fr_0.85fr]">
+      <section
+        className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[1fr_0.85fr]"
+        {...buildSectionViewAttrs("404")}
+      >
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
             {copy.notFoundKicker}
@@ -25,6 +29,12 @@ export function NotFoundContent({ locale }: NotFoundContentProps) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href={`/${locale}`}
+              {...buildAnalyticsAttrs({
+                eventName: "nav_click",
+                label: copy.backToHome,
+                href: `/${locale}`,
+                targetType: "nav",
+              })}
               className="inline-flex items-center gap-2 rounded-md bg-emerald-200 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-300"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -32,6 +42,13 @@ export function NotFoundContent({ locale }: NotFoundContentProps) {
             </Link>
             <Link
               href={`/${locale}#latest`}
+              {...buildAnalyticsAttrs({
+                eventName: "section_jump",
+                label: copy.navLatest,
+                href: `/${locale}#latest`,
+                section: "latest",
+                targetType: "internal",
+              })}
               className="inline-flex items-center gap-2 rounded-md border border-emerald-900/15 bg-white px-5 py-3 font-semibold text-slate-800 transition hover:border-emerald-500 hover:text-emerald-700"
             >
               {copy.navLatest}

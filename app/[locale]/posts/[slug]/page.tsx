@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
+import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
 import { formatDate } from "@/lib/format";
@@ -71,11 +72,21 @@ export default async function PostPage({
     <main className="bg-[rgb(249,251,250)]">
       <div className="mx-auto max-w-7xl px-5 py-6 lg:py-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-          <article className="min-w-0">
+          <article
+            className="min-w-0"
+            {...buildSectionViewAttrs(`article-${slug}`)}
+          >
             <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
               <div className="bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(239,246,255,0.95))] px-5 py-8 text-slate-900 sm:px-7 sm:py-10">
                 <Link
                   href={`/${locale}/category/${post.categorySlug}`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "category_click",
+                    label: post.categoryName,
+                    href: `/${locale}/category/${post.categorySlug}`,
+                    categorySlug: post.categorySlug,
+                    targetType: "category",
+                  })}
                   className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700"
                 >
                   {post.categoryName}
@@ -99,6 +110,13 @@ export default async function PostPage({
                     <Link
                       key={tag.slug}
                       href={`/${locale}/tag/${tag.slug}`}
+                      {...buildAnalyticsAttrs({
+                        eventName: "tag_click",
+                        label: tag.name,
+                        href: `/${locale}/tag/${tag.slug}`,
+                        tagSlug: tag.slug,
+                        targetType: "tag",
+                      })}
                       className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
                     >
                       {tag.name}
@@ -124,7 +142,10 @@ export default async function PostPage({
               </div>
             </header>
 
-            <div className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-8 shadow-sm sm:px-7">
+            <div
+              className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-8 shadow-sm sm:px-7"
+              {...buildSectionViewAttrs(`article-body-${slug}`)}
+            >
               <ArticleBody content={post.content} />
             </div>
 
@@ -132,6 +153,14 @@ export default async function PostPage({
               {post.previous ? (
                 <Link
                   href={`/${locale}/posts/${post.previous.slug}`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "article_click",
+                    label: post.previous.title,
+                    href: `/${locale}/posts/${post.previous.slug}`,
+                    articleSlug: post.previous.slug,
+                    categorySlug: post.previous.categorySlug,
+                    targetType: "article",
+                  })}
                   className="rounded-lg border border-teal-900/10 bg-white p-5 transition hover:border-emerald-300"
                 >
                   <span className="flex items-center text-sm text-slate-500">
@@ -148,6 +177,14 @@ export default async function PostPage({
               {post.next ? (
                 <Link
                   href={`/${locale}/posts/${post.next.slug}`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "article_click",
+                    label: post.next.title,
+                    href: `/${locale}/posts/${post.next.slug}`,
+                    articleSlug: post.next.slug,
+                    categorySlug: post.next.categorySlug,
+                    targetType: "article",
+                  })}
                   className="rounded-lg border border-teal-900/10 bg-white p-5 text-right transition hover:border-emerald-300"
                 >
                   <span className="flex items-center justify-end text-sm text-slate-500">
@@ -171,6 +208,14 @@ export default async function PostPage({
                     <Link
                       key={related.slug}
                       href={`/${locale}/posts/${related.slug}`}
+                      {...buildAnalyticsAttrs({
+                        eventName: "article_click",
+                        label: related.title,
+                        href: `/${locale}/posts/${related.slug}`,
+                        articleSlug: related.slug,
+                        categorySlug: related.categorySlug,
+                        targetType: "article",
+                      })}
                       className="group overflow-hidden rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] transition hover:border-emerald-300"
                     >
                       <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
@@ -219,6 +264,13 @@ export default async function PostPage({
                 {promotions.map((item) => (
                   <article
                     key={item.title}
+                    {...buildAnalyticsAttrs({
+                      eventName: "article_click",
+                      label: item.title,
+                      href: item.image,
+                      categorySlug: item.category,
+                      targetType: "sponsored",
+                    })}
                     className="overflow-hidden rounded-md border border-slate-200 bg-[rgb(249,251,250)]"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-emerald-50">

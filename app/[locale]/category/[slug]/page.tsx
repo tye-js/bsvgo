@@ -11,6 +11,7 @@ import {
   Clock3,
   ServerCog,
 } from "lucide-react";
+import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import {
   getLocalizedCategoryBySlug,
   getLocalizedPostsByCategorySlug,
@@ -168,6 +169,7 @@ export default async function CategoryPage({
     <main className={`${style.page} text-slate-900`}>
       <section
         className={`relative isolate overflow-hidden border-b ${style.border} ${style.hero}`}
+        {...buildSectionViewAttrs(`category-hero-${category.slug}`)}
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-10 lg:min-h-[520px] lg:grid-cols-[minmax(0,0.92fr)_minmax(340px,0.9fr)] lg:items-center lg:py-14">
@@ -218,6 +220,13 @@ export default async function CategoryPage({
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/${locale}/category/${category.slug}#articles`}
+                {...buildAnalyticsAttrs({
+                  eventName: "section_jump",
+                  label: copy.categoryArchiveTitle,
+                  href: `/${locale}/category/${category.slug}#articles`,
+                  categorySlug: category.slug,
+                  targetType: "internal",
+                })}
                 className="inline-flex items-center justify-center rounded-md bg-emerald-200 px-5 py-3 font-semibold text-slate-900 transition hover:bg-emerald-100"
               >
                 {copy.categoryArchiveTitle}
@@ -225,6 +234,12 @@ export default async function CategoryPage({
               </Link>
               <Link
                 href={`/${locale}`}
+                {...buildAnalyticsAttrs({
+                  eventName: "nav_click",
+                  label: copy.backToHome,
+                  href: `/${locale}`,
+                  targetType: "nav",
+                })}
                 className="inline-flex items-center justify-center rounded-md border border-teal-900/15 bg-white/70 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white"
               >
                 {copy.backToHome}
@@ -234,7 +249,18 @@ export default async function CategoryPage({
 
           {featured ? (
             <article className={`group relative min-h-[360px] overflow-hidden rounded-lg border ${style.border} bg-slate-950 shadow-sm lg:min-h-[430px]`}>
-              <Link href={`/${locale}/posts/${featured.slug}`} className="block h-full">
+              <Link
+                href={`/${locale}/posts/${featured.slug}`}
+                {...buildAnalyticsAttrs({
+                  eventName: "article_click",
+                  label: featured.title,
+                  href: `/${locale}/posts/${featured.slug}`,
+                  articleSlug: featured.slug,
+                  categorySlug: featured.categorySlug,
+                  targetType: "article",
+                })}
+                className="block h-full"
+              >
                 <Image
                   src={getRenderableImageSrc(featured.coverImage, {
                     title: featured.title,
@@ -278,6 +304,7 @@ export default async function CategoryPage({
       <section
         id="articles"
         className={`border-b py-10 sm:py-12 lg:py-14 ${style.border} ${style.list}`}
+        {...buildSectionViewAttrs(`category-articles-${category.slug}`)}
       >
         <div className="mx-auto max-w-7xl px-5">
           <div className="grid grid-cols-[24px_auto_minmax(0,1fr)] items-center gap-2 overflow-hidden whitespace-nowrap sm:grid-cols-[24px_minmax(92px,auto)_auto_minmax(0,1fr)_auto]">
@@ -335,7 +362,18 @@ function CategoryArticleCard({
     <article
       className={`group overflow-hidden rounded-lg border ${style.border} ${style.section} transition ${style.hover}`}
     >
-      <Link href={`/${locale}/posts/${post.slug}`} className="block">
+      <Link
+        href={`/${locale}/posts/${post.slug}`}
+        {...buildAnalyticsAttrs({
+          eventName: "article_click",
+          label: post.title,
+          href: `/${locale}/posts/${post.slug}`,
+          articleSlug: post.slug,
+          categorySlug: post.categorySlug,
+          targetType: "article",
+        })}
+        className="block"
+      >
         <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
           <Image
             src={getRenderableImageSrc(post.coverImage, {
@@ -370,7 +408,17 @@ function CategoryArticleCard({
         </div>
 
         <h2 className="mt-3 text-lg font-semibold leading-snug tracking-tight text-slate-950">
-          <Link href={`/${locale}/posts/${post.slug}`}>
+          <Link
+            href={`/${locale}/posts/${post.slug}`}
+            {...buildAnalyticsAttrs({
+              eventName: "article_click",
+              label: post.title,
+              href: `/${locale}/posts/${post.slug}`,
+              articleSlug: post.slug,
+              categorySlug: post.categorySlug,
+              targetType: "article",
+            })}
+          >
             {post.title}
           </Link>
         </h2>
@@ -384,6 +432,13 @@ function CategoryArticleCard({
               <Link
                 key={tag.slug}
                 href={`/${locale}/tag/${tag.slug}`}
+                {...buildAnalyticsAttrs({
+                  eventName: "tag_click",
+                  label: tag.name,
+                  href: `/${locale}/tag/${tag.slug}`,
+                  tagSlug: tag.slug,
+                  targetType: "tag",
+                })}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${style.tag}`}
               >
                 {tag.name}
@@ -392,6 +447,14 @@ function CategoryArticleCard({
           </div>
           <Link
             href={`/${locale}/posts/${post.slug}`}
+            {...buildAnalyticsAttrs({
+              eventName: "article_click",
+              label: post.title,
+              href: `/${locale}/posts/${post.slug}`,
+              articleSlug: post.slug,
+              categorySlug: post.categorySlug,
+              targetType: "article",
+            })}
             aria-label={`${copy.readMore}: ${post.title}`}
             className={`grid h-9 w-9 shrink-0 place-items-center rounded-md border ${style.border} text-slate-700 transition ${style.hover}`}
           >

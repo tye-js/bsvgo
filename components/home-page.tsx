@@ -11,6 +11,7 @@ import {
 import { getLocalizedCategories, getLocalizedPosts } from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
 import { isCategorySlug, slugifyTag, type CategorySlug } from "@/lib/content";
+import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
@@ -438,7 +439,10 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
   return (
     <main className="bg-[rgb(249,251,250)] text-slate-900">
-      <section className="relative isolate overflow-hidden border-b border-emerald-900/10 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(250,252,255,0.96))]">
+      <section
+        className="relative isolate overflow-hidden border-b border-emerald-900/10 bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(250,252,255,0.96))]"
+        {...buildSectionViewAttrs("home-hero")}
+      >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.78fr)] lg:items-end lg:py-14">
           <div className="max-w-3xl">
@@ -454,6 +458,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`/${locale}#latest`}
+                {...buildAnalyticsAttrs({
+                  eventName: "section_jump",
+                  label: copy.heroPrimary,
+                  href: `/${locale}#latest`,
+                  section: "home-hero",
+                  targetType: "internal",
+                })}
                 className="inline-flex items-center justify-center rounded-md bg-emerald-200 px-5 py-3 font-semibold text-slate-900 transition hover:bg-emerald-100"
               >
                 {copy.heroPrimary}
@@ -461,6 +472,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
               </Link>
               <Link
                 href={`/${locale}/category/blockchain`}
+                {...buildAnalyticsAttrs({
+                  eventName: "category_click",
+                  label: copy.heroSecondary,
+                  href: `/${locale}/category/blockchain`,
+                  categorySlug: "blockchain",
+                  targetType: "category",
+                })}
                 className="inline-flex items-center justify-center rounded-md border border-teal-900/15 bg-white/70 px-5 py-3 font-semibold text-slate-700 transition hover:bg-white"
               >
                 {copy.heroSecondary}
@@ -470,7 +488,18 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
           {featured ? (
             <aside className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
-              <Link href={`/${locale}/posts/${featured.slug}`} className="group block">
+              <Link
+                href={`/${locale}/posts/${featured.slug}`}
+                {...buildAnalyticsAttrs({
+                  eventName: "article_click",
+                  label: featured.title,
+                  href: `/${locale}/posts/${featured.slug}`,
+                  articleSlug: featured.slug,
+                  categorySlug: featured.categorySlug,
+                  targetType: "article",
+                })}
+                className="group block"
+              >
                 <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
                   <Image
                     src={getRenderableImageSrc(featured.coverImage, {
@@ -512,7 +541,11 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section id="popular" className="border-b border-emerald-900/10 bg-white py-16">
+      <section
+        id="popular"
+        className="border-b border-emerald-900/10 bg-white py-16"
+        {...buildSectionViewAttrs("popular")}
+      >
         <div className="mx-auto max-w-7xl px-5">
           <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
             <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-800">
@@ -529,6 +562,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </p>
             <Link
               href={`/${locale}#popular`}
+              {...buildAnalyticsAttrs({
+                eventName: "section_jump",
+                label: copy.viewAll,
+                href: `/${locale}#popular`,
+                section: "popular",
+                targetType: "internal",
+              })}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
             >
               {copy.viewAll}
@@ -583,7 +623,11 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section id="latest" className="border-b border-emerald-900/10 bg-[rgb(240,253,250)] py-16">
+      <section
+        id="latest"
+        className="border-b border-emerald-900/10 bg-[rgb(240,253,250)] py-16"
+        {...buildSectionViewAttrs("latest")}
+      >
         <div className="mx-auto max-w-7xl px-5">
           <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
             <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-800">
@@ -600,6 +644,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </p>
             <Link
               href={`/${locale}#latest`}
+              {...buildAnalyticsAttrs({
+                eventName: "section_jump",
+                label: copy.viewAll,
+                href: `/${locale}#latest`,
+                section: "latest",
+                targetType: "internal",
+              })}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
             >
               {copy.viewAll}
@@ -613,7 +664,18 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 key={post.slug}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
               >
-                <Link href={`/${locale}/posts/${post.slug}`} className="group block">
+                <Link
+                  href={`/${locale}/posts/${post.slug}`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "article_click",
+                    label: post.title,
+                    href: `/${locale}/posts/${post.slug}`,
+                    articleSlug: post.slug,
+                    categorySlug: post.categorySlug,
+                    targetType: "article",
+                  })}
+                  className="group block"
+                >
                 <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
                   <Image
                     src={getRenderableImageSrc(post.coverImage, {
@@ -639,7 +701,17 @@ export async function HomePage({ locale }: { locale: Locale }) {
                     {formatDate(post.publishedAt, locale)}
                   </p>
                   <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
-                    <Link href={`/${locale}/posts/${post.slug}`}>
+                    <Link
+                      href={`/${locale}/posts/${post.slug}`}
+                      {...buildAnalyticsAttrs({
+                        eventName: "article_click",
+                        label: post.title,
+                        href: `/${locale}/posts/${post.slug}`,
+                        articleSlug: post.slug,
+                        categorySlug: post.categorySlug,
+                        targetType: "article",
+                      })}
+                    >
                       {post.title}
                     </Link>
                   </h3>
@@ -651,6 +723,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
                       <Link
                         key={tag.slug}
                         href={`/${locale}/tag/${tag.slug}`}
+                        {...buildAnalyticsAttrs({
+                          eventName: "tag_click",
+                          label: tag.name,
+                          href: `/${locale}/tag/${tag.slug}`,
+                          tagSlug: tag.slug,
+                          targetType: "tag",
+                        })}
                         className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
                       >
                         {tag.name}
@@ -700,6 +779,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <section
             key={category.slug}
             className={`border-b py-12 ${style.border} ${style.section}`}
+            {...buildSectionViewAttrs(`topic-${category.slug}`)}
           >
             <div className="mx-auto max-w-7xl px-5">
               <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
@@ -712,7 +792,16 @@ export async function HomePage({ locale }: { locale: Locale }) {
                   {category.slug}
                 </p>
                 <h2 className="text-sm font-semibold tracking-tight text-slate-950">
-                  <Link href={`/${locale}/category/${category.slug}`}>
+                  <Link
+                    href={`/${locale}/category/${category.slug}`}
+                    {...buildAnalyticsAttrs({
+                      eventName: "category_click",
+                      label: category.name,
+                      href: `/${locale}/category/${category.slug}`,
+                      categorySlug: category.slug,
+                      targetType: "category",
+                    })}
+                  >
                     {category.name}
                   </Link>
                 </h2>
@@ -721,6 +810,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 </p>
                 <Link
                   href={`/${locale}/category/${category.slug}`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "category_click",
+                    label: copy.viewAll,
+                    href: `/${locale}/category/${category.slug}`,
+                    categorySlug: category.slug,
+                    targetType: "category",
+                  })}
                   className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
                 >
                   {copy.viewAll}
@@ -735,7 +831,18 @@ export async function HomePage({ locale }: { locale: Locale }) {
                     className={`overflow-hidden rounded-lg border border-slate-200 ${style.card} transition hover:border-emerald-300`}
                   >
                     {post.href ? (
-                      <Link href={post.href} className="group block">
+                      <Link
+                        href={post.href}
+                        {...buildAnalyticsAttrs({
+                          eventName: "article_click",
+                          label: post.title,
+                          href: post.href,
+                          articleSlug: post.href.split("/").pop(),
+                          categorySlug: category.slug,
+                          targetType: "article",
+                        })}
+                        className="group block"
+                      >
                         <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
                           <Image
                             src={getRenderableImageSrc(post.image, {
@@ -787,7 +894,19 @@ export async function HomePage({ locale }: { locale: Locale }) {
                       </p>
                       <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
                         {post.href ? (
-                          <Link href={post.href}>{post.title}</Link>
+                          <Link
+                            href={post.href}
+                            {...buildAnalyticsAttrs({
+                              eventName: "article_click",
+                              label: post.title,
+                              href: post.href,
+                              articleSlug: post.href.split("/").pop(),
+                              categorySlug: category.slug,
+                              targetType: "article",
+                            })}
+                          >
+                            {post.title}
+                          </Link>
                         ) : (
                           post.title
                         )}
@@ -801,6 +920,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
                             <Link
                               key={tag.slug}
                               href={`/${locale}/tag/${tag.slug}`}
+                              {...buildAnalyticsAttrs({
+                                eventName: "tag_click",
+                                label: tag.name,
+                                href: `/${locale}/tag/${tag.slug}`,
+                                tagSlug: tag.slug,
+                                targetType: "tag",
+                              })}
                               className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
                             >
                               {tag.name}
