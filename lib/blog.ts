@@ -221,9 +221,9 @@ function publishedPostConditions(locale: Locale): SQL[] {
 }
 
 async function queryCategories(locale: Locale) {
-  const { db } = await import("@/db");
+  const { readonlyDb } = await import("@/db");
 
-  return db
+  return readonlyDb
     .select({
       slug: categoryTable.slug,
       name: categoryTranslations.name,
@@ -239,9 +239,9 @@ async function queryCategories(locale: Locale) {
 }
 
 async function queryCategoryBySlug(locale: Locale, slug: string) {
-  const { db } = await import("@/db");
+  const { readonlyDb } = await import("@/db");
 
-  return db
+  return readonlyDb
     .select({
       slug: categoryTable.slug,
       name: categoryTranslations.name,
@@ -257,7 +257,7 @@ async function queryCategoryBySlug(locale: Locale, slug: string) {
 }
 
 async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
-  const { db } = await import("@/db");
+  const { readonlyDb } = await import("@/db");
   const conditions = publishedPostConditions(locale);
 
   if (options.slug) {
@@ -295,7 +295,7 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
     conditions.push(sql`${postTable.publishedAt} < ${options.beforePublishedAt}`);
   }
 
-  const query = db
+  const query = readonlyDb
     .select({
       slug: postTable.slug,
       featured: postTable.featured,
@@ -362,9 +362,9 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
 }
 
 async function queryTags(locale: Locale) {
-  const { db } = await import("@/db");
+  const { readonlyDb } = await import("@/db");
 
-  return db
+  return readonlyDb
     .select({
       slug: tagTable.slug,
       name: tagTable.name,
@@ -380,9 +380,9 @@ async function queryTags(locale: Locale) {
 }
 
 async function queryTagBySlug(locale: Locale, slug: string) {
-  const { db } = await import("@/db");
+  const { readonlyDb } = await import("@/db");
 
-  return db
+  return readonlyDb
     .select({
       slug: tagTable.slug,
       name: tagTable.name,

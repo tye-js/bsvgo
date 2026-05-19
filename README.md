@@ -23,7 +23,8 @@ Open http://localhost:3000. The default route redirects to `/en`.
 
 ## Database
 
-Configure `DATABASE_URL`, then run:
+Configure `DATABASE_URL` for write/migration access and `DATABASE_READONLY_URL`
+for public blog reads, then run:
 
 ```bash
 npm run db:generate
@@ -41,6 +42,7 @@ The GitHub Actions workflow deploys `main` to a VPS through SSH. Required secret
 - `SERVER_USER`
 - `SSH_PRIVATE_KEY`
 - `DATABASE_URL`
+- `DATABASE_READONLY_URL`
 - `NEXT_PUBLIC_SITE_URL`
 
 The deploy job installs dependencies, runs Drizzle migrations, builds the app, and reloads PM2 with `ecosystem.config.cjs`.
