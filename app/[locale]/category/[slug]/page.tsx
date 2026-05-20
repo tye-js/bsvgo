@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import {
+  getCategoryFeaturedPost,
+  getCategoryPromotedPosts,
   getLocalizedCategoryBySlug,
   getLocalizedPostsByCategorySlug,
   type LocalizedPost,
@@ -82,12 +84,18 @@ const categoryPageCopy = {
     categoryLabel: "Category",
     latestLabel: "Latest update",
     featuredLabel: "Lead article",
+    promotedLabel: "Promoted",
+    promotedTitle: "Promoted articles",
+    promotedDescription: "Sponsored reads selected for this category.",
     empty: "No articles in this category yet.",
   },
   zh: {
     categoryLabel: "分类",
     latestLabel: "最近更新",
     featuredLabel: "主打文章",
+    promotedLabel: "推广",
+    promotedTitle: "推广文章",
+    promotedDescription: "为当前分类筛选的推广阅读内容。",
     empty: "这个分类暂时还没有文章。",
   },
 } satisfies Record<
@@ -96,6 +104,9 @@ const categoryPageCopy = {
     categoryLabel: string;
     latestLabel: string;
     featuredLabel: string;
+    promotedLabel: string;
+    promotedTitle: string;
+    promotedDescription: string;
     empty: string;
   }
 >;
@@ -157,8 +168,12 @@ export default async function CategoryPage({
   const knownCategorySlug = isCategorySlug(category.slug) ? category.slug : null;
   const copy = uiCopy[locale];
   const pageCopy = categoryPageCopy[locale];
-  const posts = await getLocalizedPostsByCategorySlug(locale, slug);
-  const featured = posts.find((post) => post.featured) ?? posts[0] ?? null;
+  const [posts, placedFeatured, promotedPosts] = await Promise.all([
+    getLocalizedPostsByCategorySlug(locale, slug),
+    getCategoryFeaturedPost(locale, slug),
+    getCategoryPromotedPosts(locale, slug, 5),
+  ]);
+  const featured = placedFeatured ?? posts[0] ?? null;
   const latestDate = posts[0]?.publishedAt;
   const Icon = knownCategorySlug ? sectionIcons[knownCategorySlug] : ServerCog;
   const style = knownCategorySlug
@@ -300,6 +315,57 @@ export default async function CategoryPage({
           ) : null}
         </div>
       </section>
+
+      {promotedPosts.length > 0 ? (
+        <section
+          id="promoted"
+          className={`border-b py-10 sm:py-12 ${style.border} ${style.section}`}
+          {...buildSectionViewAttrs(`category-promoted-${category.slug}`)}
+        >
+          <div className="mx-auto max-w-7xl px-5">
+            <div className="grid grid-cols-[24px_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap sm:grid-cols-[24px_minmax(92px,auto)_auto_minmax(0,1fr)_auto]">
+              <div className={`grid h-6 w-6 place-items-center rounded-md ${style.icon}`}>
+                <ArrowUpRight className="h-3 w-3" />
+              </div>
+              <p className={`hidden truncate text-[11px] font-semibold uppercase tracking-[0.14em] sm:block ${style.eyebrow}`}>
+                {pageCopy.promotedLabel}
+              </p>
+              <h2 className="text-sm font-semibold tracking-tight text-slate-950">
+                {pageCopy.promotedTitle}
+              </h2>
+              <p className="min-w-0 truncate text-xs leading-5 text-slate-500">
+                {pageCopy.promotedDescription}
+              </p>
+              <Link
+                href={`/${locale}/category/${category.slug}#articles`}
+                {...buildAnalyticsAttrs({
+                  eventName: "section_jump",
+                  label: copy.viewAll,
+                  href: `/${locale}/category/${category.slug}#articles`,
+                  section: `category-promoted-${category.slug}`,
+                  categorySlug: category.slug,
+                  targetType: "internal",
+                })}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
+              >
+                {copy.viewAll}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              {promotedPosts.map((post) => (
+                <PromotedArticleCard
+                  key={post.slug}
+                  locale={locale}
+                  post={post}
+                  style={style}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section
         id="articles"
@@ -460,6 +526,99 @@ function CategoryArticleCard({
           >
             <ArrowUpRight className="h-4 w-4" />
           </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function PromotedArticleCard({
+  locale,
+  post,
+  style,
+}: {
+  locale: Locale;
+  post: LocalizedPost;
+  style: CategoryStyle;
+}) {
+  return (
+    <article
+      className={`overflow-hidden rounded-lg border ${style.border} bg-white transition ${style.hover}`}
+    >
+      <Link
+        href={`/${locale}/posts/${post.slug}`}
+        {...buildAnalyticsAttrs({
+          eventName: "article_click",
+          label: post.title,
+          href: `/${locale}/posts/${post.slug}`,
+          articleSlug: post.slug,
+          categorySlug: post.categorySlug,
+          section: "category-promoted",
+          targetType: "article",
+        })}
+        className="group block"
+      >
+        <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+          <Image
+            src={getRenderableImageSrc(post.coverImage, {
+              title: post.title,
+              label: post.categoryName,
+              subtitle: post.excerpt,
+              categorySlug: post.categorySlug,
+              variant: "card",
+            })}
+            alt=""
+            fill
+            sizes="(max-width: 1024px) 50vw, 320px"
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+          <span className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold ${style.accent}`}>
+            {post.categoryName}
+          </span>
+        </div>
+      </Link>
+
+      <div className="p-4">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          {formatDate(post.publishedAt, locale)}
+        </p>
+        <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
+          <Link
+            href={`/${locale}/posts/${post.slug}`}
+            {...buildAnalyticsAttrs({
+              eventName: "article_click",
+              label: post.title,
+              href: `/${locale}/posts/${post.slug}`,
+              articleSlug: post.slug,
+              categorySlug: post.categorySlug,
+              section: "category-promoted",
+              targetType: "article",
+            })}
+          >
+            {post.title}
+          </Link>
+        </h3>
+        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+          {post.excerpt}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {(post.tags ?? []).slice(0, 2).map((tag) => (
+            <Link
+              key={tag.slug}
+              href={`/${locale}/tag/${tag.slug}`}
+              {...buildAnalyticsAttrs({
+                eventName: "tag_click",
+                label: tag.name,
+                href: `/${locale}/tag/${tag.slug}`,
+                tagSlug: tag.slug,
+                targetType: "tag",
+              })}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${style.tag}`}
+            >
+              {tag.name}
+            </Link>
+          ))}
         </div>
       </div>
     </article>

@@ -67,6 +67,38 @@ export const postTags = pgTable(
   (table) => [primaryKey({ columns: [table.postId, table.tagId] })]
 );
 
+export const postPlacements = pgTable(
+  "post_placements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    scope: varchar("scope", { length: 32 }).notNull(),
+    slot: varchar("slot", { length: 32 }).notNull(),
+    categoryId: uuid("category_id").references(() => categories.id, {
+      onDelete: "cascade",
+    }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    startsAt: timestamp("starts_at"),
+    endsAt: timestamp("ends_at"),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("post_placements_lookup_idx").on(
+      table.scope,
+      table.slot,
+      table.categoryId,
+      table.enabled,
+      table.sortOrder
+    ),
+    index("post_placements_post_idx").on(table.postId),
+    index("post_placements_category_idx").on(table.categoryId),
+  ]
+);
+
 export const analyticsEvents = pgTable(
   "analytics_events",
   {
@@ -118,6 +150,7 @@ export const postTranslations = pgTable("post_translations", {
 export const categoryRelations = relations(categories, ({ many }) => ({
   translations: many(categoryTranslations),
   posts: many(posts),
+  placements: many(postPlacements),
 }));
 
 export const postRelations = relations(posts, ({ one, many }) => ({
@@ -127,6 +160,7 @@ export const postRelations = relations(posts, ({ one, many }) => ({
   }),
   translations: many(postTranslations),
   tags: many(postTags),
+  placements: many(postPlacements),
 }));
 
 export const tagRelations = relations(tags, ({ many }) => ({
@@ -144,10 +178,22 @@ export const postTagRelations = relations(postTags, ({ one }) => ({
   }),
 }));
 
+export const postPlacementRelations = relations(postPlacements, ({ one }) => ({
+  post: one(posts, {
+    fields: [postPlacements.postId],
+    references: [posts.id],
+  }),
+  category: one(categories, {
+    fields: [postPlacements.categoryId],
+    references: [categories.id],
+  }),
+}));
+
 export type Category = typeof categories.$inferSelect;
 export type CategoryTranslation = typeof categoryTranslations.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type PostTranslation = typeof postTranslations.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type PostTag = typeof postTags.$inferSelect;
+export type PostPlacement = typeof postPlacements.$inferSelect;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;

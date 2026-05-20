@@ -9,6 +9,7 @@ import {
   ServerCog,
 } from "lucide-react";
 import {
+  getFeaturedPost,
   getLocalizedCategories,
   getLocalizedPosts,
   getSponsoredPosts,
@@ -431,13 +432,14 @@ const topicShowcaseArticles = {
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = uiCopy[locale];
-  const [categories, posts, sponsoredPosts] = await Promise.all([
+  const [categories, posts, homeFeaturedPost, sponsoredPosts] = await Promise.all([
     getLocalizedCategories(locale),
     getLocalizedPosts(locale),
+    getFeaturedPost(locale),
     getSponsoredPosts(locale, 5),
   ]);
 
-  const featured = posts.find((post) => post.featured) ?? posts[0] ?? null;
+  const featured = homeFeaturedPost ?? posts[0] ?? null;
   const latestPosts = posts.slice(0, 5);
 
   return (

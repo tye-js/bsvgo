@@ -36,6 +36,13 @@
       "when": 1779220800000,
       "tag": "0004_post_marking",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779224400000,
+      "tag": "0005_post_placements",
+      "breakpoints": true
     }
   ]
 }
