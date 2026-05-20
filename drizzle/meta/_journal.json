@@ -29,6 +29,13 @@
       "when": 1779168206000,
       "tag": "0003_analytics_events",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779220800000,
+      "tag": "0004_post_marking",
+      "breakpoints": true
     }
   ]
 }

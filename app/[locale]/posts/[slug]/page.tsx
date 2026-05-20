@@ -77,54 +77,7 @@ export default async function PostPage({
             {...buildSectionViewAttrs(`article-${slug}`)}
           >
             <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
-              <div className="bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(239,246,255,0.95))] px-5 py-8 text-slate-900 sm:px-7 sm:py-10">
-                <Link
-                  href={`/${locale}/category/${post.categorySlug}`}
-                  {...buildAnalyticsAttrs({
-                    eventName: "category_click",
-                    label: post.categoryName,
-                    href: `/${locale}/category/${post.categorySlug}`,
-                    categorySlug: post.categorySlug,
-                    targetType: "category",
-                  })}
-                  className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700"
-                >
-                  {post.categoryName}
-                </Link>
-                <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight md:text-6xl">
-                  {post.title}
-                </h1>
-                <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-                  {post.excerpt}
-                </p>
-                <div className="mt-7 flex flex-wrap gap-4 text-sm text-slate-500">
-                  <span>
-                    {copy.publishedOn} {formatDate(post.publishedAt, locale)}
-                  </span>
-                  <span>
-                    {post.readingMinutes} {copy.readingTime}
-                  </span>
-                </div>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {(post.tags ?? []).map((tag) => (
-                    <Link
-                      key={tag.slug}
-                      href={`/${locale}/tag/${tag.slug}`}
-                      {...buildAnalyticsAttrs({
-                        eventName: "tag_click",
-                        label: tag.name,
-                        href: `/${locale}/tag/${tag.slug}`,
-                        tagSlug: tag.slug,
-                        targetType: "tag",
-                      })}
-                      className="rounded-md bg-white/80 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-white"
-                    >
-                      {tag.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <div className="relative aspect-[21/9] overflow-hidden bg-emerald-50">
+              <div className="relative min-h-[420px] overflow-hidden bg-emerald-50 sm:min-h-[470px] lg:min-h-[520px]">
                 <Image
                   src={getRenderableImageSrc(post.coverImage, {
                     title: post.title,
@@ -136,14 +89,53 @@ export default async function PostPage({
                   alt=""
                   fill
                   sizes="(max-width: 1024px) 100vw, 900px"
-                  className="object-cover"
+                  className="object-cover object-center"
                   priority
                 />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(236,253,245,0.12)_0%,rgba(249,251,250,0.05)_38%,rgba(249,251,250,0.26)_64%,rgba(249,251,250,0.96)_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-7 sm:pb-7 lg:px-10 lg:pb-10">
+                  <div className="max-w-3xl rounded-2xl border border-white/40 bg-white/65 p-5 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-6 lg:p-7">
+                    <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                      {post.title}
+                    </h1>
+                    <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+                <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                  <span>
+                    {copy.publishedOn} {formatDate(post.publishedAt, locale)}
+                  </span>
+                  <span>
+                    {post.readingMinutes} {copy.readingTime}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(post.tags ?? []).map((tag) => (
+                    <Link
+                      key={tag.slug}
+                      href={`/${locale}/tag/${tag.slug}`}
+                      {...buildAnalyticsAttrs({
+                        eventName: "tag_click",
+                        label: tag.name,
+                        href: `/${locale}/tag/${tag.slug}`,
+                        tagSlug: tag.slug,
+                        targetType: "tag",
+                      })}
+                      className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                    >
+                      {tag.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </header>
 
             <div
-              className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-8 shadow-sm sm:px-7"
+              className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-10 shadow-sm sm:px-7 lg:px-10"
               {...buildSectionViewAttrs(`article-body-${slug}`)}
             >
               <ArticleBody content={post.content} />

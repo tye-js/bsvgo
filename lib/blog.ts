@@ -4,8 +4,10 @@ import {
   asc,
   desc,
   eq,
+  gt,
   isNotNull,
   isNull,
+  lt,
   ne,
   sql,
   type SQL,
@@ -40,6 +42,8 @@ export type LocalizedTagReference = {
 export type LocalizedPost = {
   slug: string;
   featured: boolean;
+  pinned: boolean;
+  mark: string;
   coverImage: string;
   publishedAt: string;
   categorySlug: string;
@@ -82,6 +86,8 @@ type PostQueryOptions = {
   tagSlug?: string;
   excludeSlug?: string;
   featured?: boolean;
+  pinned?: boolean;
+  mark?: string;
   afterPublishedAt?: Date;
   beforePublishedAt?: Date;
   sort?: "newest" | "oldest";
@@ -175,6 +181,8 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
       return {
         slug: post.slug,
         featured: post.featured,
+        pinned: post.featured,
+        mark: post.featured ? "featured" : "",
         coverImage: normalizeCoverImage(post.coverImage, post.categorySlug),
         publishedAt: post.publishedAt,
         categorySlug: post.categorySlug,
@@ -287,18 +295,28 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
     conditions.push(eq(postTable.featured, options.featured));
   }
 
+  if (typeof options.pinned === "boolean") {
+    conditions.push(eq(postTable.pinned, options.pinned));
+  }
+
+  if (options.mark) {
+    conditions.push(eq(postTable.mark, options.mark));
+  }
+
   if (options.afterPublishedAt) {
-    conditions.push(sql`${postTable.publishedAt} > ${options.afterPublishedAt}`);
+    conditions.push(gt(postTable.publishedAt, options.afterPublishedAt));
   }
 
   if (options.beforePublishedAt) {
-    conditions.push(sql`${postTable.publishedAt} < ${options.beforePublishedAt}`);
+    conditions.push(lt(postTable.publishedAt, options.beforePublishedAt));
   }
 
   const query = readonlyDb
     .select({
       slug: postTable.slug,
       featured: postTable.featured,
+      pinned: postTable.pinned,
+      mark: postTable.mark,
       coverImage: postTable.coverImage,
       publishedAt: postTable.publishedAt,
       categorySlug: categoryTable.slug,
@@ -336,6 +354,8 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
       postTable.id,
       postTable.slug,
       postTable.featured,
+      postTable.pinned,
+      postTable.mark,
       postTable.coverImage,
       postTable.publishedAt,
       categoryTable.slug,
@@ -476,6 +496,19 @@ export const getFeaturedPost = cache(async (locale: Locale) => {
     return getFallbackPosts(locale).find((post) => post.featured) ?? null;
   }
 });
+
+export const getSponsoredPosts = cache(
+  async (locale: Locale, limit = 5): Promise<LocalizedPost[]> => {
+    try {
+      return (await queryPosts(locale, { mark: "sponsored", limit })).map(mapPostRow);
+    } catch (error) {
+      logDatabaseFallback(`sponsored:${locale}`, error);
+      return getFallbackPosts(locale)
+        .filter((post) => post.mark === "sponsored")
+        .slice(0, limit);
+    }
+  }
+);
 
 export const getLocalizedTags = cache(
   async (locale: Locale): Promise<LocalizedTag[]> => {

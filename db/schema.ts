@@ -38,6 +38,8 @@ export const posts = pgTable("posts", {
     .notNull()
     .references(() => categories.id, { onDelete: "restrict" }),
   featured: boolean("featured").notNull().default(false),
+  pinned: boolean("pinned").notNull().default(false),
+  mark: varchar("mark", { length: 20 }).notNull().default(""),
   coverImage: text("cover_image").notNull(),
   publishedAt: timestamp("published_at"),
   status: varchar("status", { length: 32 }).notNull().default("published"),

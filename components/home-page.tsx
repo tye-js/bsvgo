@@ -8,13 +8,16 @@ import {
   Newspaper,
   ServerCog,
 } from "lucide-react";
-import { getLocalizedCategories, getLocalizedPosts } from "@/lib/blog";
+import {
+  getLocalizedCategories,
+  getLocalizedPosts,
+  getSponsoredPosts,
+} from "@/lib/blog";
 import { getRenderableImageSrc } from "@/lib/cover-art";
 import { isCategorySlug, slugifyTag, type CategorySlug } from "@/lib/content";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { formatDate } from "@/lib/format";
 import { Locale, uiCopy } from "@/lib/i18n";
-import { promotedArticles } from "@/lib/promotions";
 
 const sectionIcons = {
   blockchain: Blocks,
@@ -428,14 +431,14 @@ const topicShowcaseArticles = {
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = uiCopy[locale];
-  const [categories, posts] = await Promise.all([
+  const [categories, posts, sponsoredPosts] = await Promise.all([
     getLocalizedCategories(locale),
     getLocalizedPosts(locale),
+    getSponsoredPosts(locale, 5),
   ]);
 
   const featured = posts.find((post) => post.featured) ?? posts[0] ?? null;
   const latestPosts = posts.slice(0, 5);
-  const promotions = promotedArticles[locale].slice(0, 5);
 
   return (
     <main className="bg-[rgb(249,251,250)] text-slate-900">
@@ -541,87 +544,129 @@ export async function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section
-        id="popular"
-        className="border-b border-emerald-900/10 bg-white py-16"
-        {...buildSectionViewAttrs("popular")}
-      >
-        <div className="mx-auto max-w-7xl px-5">
-          <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
-            <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-800">
-              <Flame className="h-3 w-3" />
-            </div>
-            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              popular
-            </p>
-            <h2 className="text-sm font-semibold tracking-tight text-slate-950">
-              {copy.popularTitle}
-            </h2>
-            <p className="min-w-0 truncate text-xs leading-5 text-slate-500">
-              {copy.popularDescription}
-            </p>
-            <Link
-              href={`/${locale}#popular`}
-              {...buildAnalyticsAttrs({
-                eventName: "section_jump",
-                label: copy.viewAll,
-                href: `/${locale}#popular`,
-                section: "popular",
-                targetType: "internal",
-              })}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
-            >
-              {copy.viewAll}
-              <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            {promotions.map((article) => (
-              <article
-                key={article.title}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
+      {sponsoredPosts.length > 0 ? (
+        <section
+          id="popular"
+          className="border-b border-emerald-900/10 bg-white py-16"
+          {...buildSectionViewAttrs("popular")}
+        >
+          <div className="mx-auto max-w-7xl px-5">
+            <div className="grid grid-cols-[24px_minmax(78px,auto)_auto_minmax(0,1fr)_auto] items-center gap-2 overflow-hidden whitespace-nowrap">
+              <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-800">
+                <Flame className="h-3 w-3" />
+              </div>
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                popular
+              </p>
+              <h2 className="text-sm font-semibold tracking-tight text-slate-950">
+                {copy.popularTitle}
+              </h2>
+              <p className="min-w-0 truncate text-xs leading-5 text-slate-500">
+                {copy.popularDescription}
+              </p>
+              <Link
+                href={`/${locale}#popular`}
+                {...buildAnalyticsAttrs({
+                  eventName: "section_jump",
+                  label: copy.viewAll,
+                  href: `/${locale}#popular`,
+                  section: "popular",
+                  targetType: "internal",
+                })}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
               >
-                <div className="group relative aspect-[16/10] overflow-hidden bg-emerald-50">
-                  <Image
-                    src={getRenderableImageSrc(article.image, {
-                      title: article.title,
-                      label: article.category,
-                      subtitle: article.description,
-                      categorySlug: article.category.toLowerCase(),
-                      variant: "card",
+                {copy.viewAll}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              {sponsoredPosts.map((post) => (
+                <article
+                  key={post.slug}
+                  className="overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-emerald-300"
+                >
+                  <Link
+                    href={`/${locale}/posts/${post.slug}`}
+                    {...buildAnalyticsAttrs({
+                      eventName: "article_click",
+                      label: post.title,
+                      href: `/${locale}/posts/${post.slug}`,
+                      articleSlug: post.slug,
+                      categorySlug: post.categorySlug,
+                      section: "popular",
+                      targetType: "article",
                     })}
-                    alt=""
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 320px"
-                    className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
-                  <span className="absolute bottom-3 left-3 rounded-md bg-emerald-200 px-2.5 py-1 text-xs font-semibold text-slate-900">
-                    {article.category}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <p className="truncate text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                    {article.sponsor}
-                  </p>
-                  <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
-                    {article.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
-                    {article.description}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      {article.category}
-                    </span>
+                    className="group block"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                      <Image
+                        src={getRenderableImageSrc(post.coverImage, {
+                          title: post.title,
+                          label: post.categoryName,
+                          subtitle: post.excerpt,
+                          categorySlug: post.categorySlug,
+                          variant: "card",
+                        })}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1024px) 50vw, 320px"
+                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />
+                      <span className="absolute bottom-3 left-3 rounded-md bg-emerald-200 px-2.5 py-1 text-xs font-semibold text-slate-900">
+                        {post.categoryName}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                      {formatDate(post.publishedAt, locale)}
+                    </p>
+                    <h3 className="mt-2 text-base font-semibold leading-snug text-slate-950">
+                      <Link
+                        href={`/${locale}/posts/${post.slug}`}
+                        {...buildAnalyticsAttrs({
+                          eventName: "article_click",
+                          label: post.title,
+                          href: `/${locale}/posts/${post.slug}`,
+                          articleSlug: post.slug,
+                          categorySlug: post.categorySlug,
+                          section: "popular",
+                          targetType: "article",
+                        })}
+                      >
+                        {post.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+                      {post.excerpt}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(post.tags ?? []).slice(0, 2).map((tag) => (
+                        <Link
+                          key={tag.slug}
+                          href={`/${locale}/tag/${tag.slug}`}
+                          {...buildAnalyticsAttrs({
+                            eventName: "tag_click",
+                            label: tag.name,
+                            href: `/${locale}/tag/${tag.slug}`,
+                            tagSlug: tag.slug,
+                            targetType: "tag",
+                          })}
+                          className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section
         id="latest"
