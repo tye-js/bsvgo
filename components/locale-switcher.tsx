@@ -22,6 +22,10 @@ function getLocaleHref(pathname: string, targetLocale: Locale, suffix: string) {
   return `/${targetLocale}${pathname === "/" ? "" : pathname}${suffix}`;
 }
 
+function rememberLocale(locale: Locale) {
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; samesite=lax`;
+}
+
 export function LocaleSwitcher({ locale, className = "" }: LocaleSwitcherProps) {
   const pathname = usePathname() || `/${locale}`;
   const [suffix, setSuffix] = useState("");
@@ -50,6 +54,7 @@ export function LocaleSwitcher({ locale, className = "" }: LocaleSwitcherProps) 
             targetType: "locale",
           })}
           aria-current={item === locale ? "page" : undefined}
+          onClick={() => rememberLocale(item)}
           className={
             item === locale
               ? "rounded-md bg-emerald-100 px-3 py-1.5 font-medium text-slate-900"
