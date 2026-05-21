@@ -57,6 +57,8 @@ export const uiCopy: Record<
     aboutKicker: string;
     aboutMissionTitle: string;
     aboutMissionBody: string;
+    aboutBsvTitle: string;
+    aboutBsvBody: string;
     aboutPrinciplesTitle: string;
     aboutPrinciples: string[];
     aboutContactTitle: string;
@@ -68,9 +70,9 @@ export const uiCopy: Record<
     navLatest: "Latest",
     navAbout: "About",
     heroKicker: "BSVgo / Blockchain, AI, Infrastructure",
-    heroTitle: "A forward-moving blog for the next wave of builders.",
+    heroTitle: "Understand AI, blockchain, and the infrastructure to build with both.",
     heroDescription:
-      "English-first stories with Chinese support for readers tracking blockchain, AI systems, and the infrastructure behind them.",
+      "BSVgo explains blockchain technology, AI development, and the servers, domains, and network tools builders need to participate in the next wave.",
     heroPrimary: "Read latest posts",
     heroSecondary: "Browse by topic",
     featuredKicker: "Latest read",
@@ -104,16 +106,19 @@ export const uiCopy: Record<
       "Return to the latest posts or use the navigation to continue exploring blockchain, AI, and infrastructure notes.",
     aboutTitle: "About BSVgo",
     aboutDescription:
-      "BSVgo publishes practical notes for readers tracking blockchain, AI systems, and the infrastructure behind modern products.",
-    aboutKicker: "About / Builder notes",
-    aboutMissionTitle: "What we publish",
+      "BSVgo is a technology blog about blockchain, AI, and infrastructure for readers who want to understand the stack and take part in building it.",
+    aboutKicker: "About / AI needs accountable infrastructure",
+    aboutMissionTitle: "Why this site exists",
     aboutMissionBody:
-      "We focus on clear, useful writing for builders: how systems are designed, where infrastructure choices matter, and what blockchain or AI changes mean in real product work.",
+      "AI can multiply efficiency and create new value, but it also needs better provenance, ownership, and distribution mechanisms. BSVgo connects AI news, blockchain technology, and infrastructure recommendations so readers can understand both the opportunity and the practical path to participate.",
+    aboutBsvTitle: "Why BSV matters",
+    aboutBsvBody:
+      "The thesis behind BSVgo is that blockchain can help AI trace data origins, establish rights, and distribute value back to the people and systems that create useful data. BSV is central to that view because high throughput, low fees, compliance-oriented design, and micropayments make it suitable for frequent AI-era transactions.",
     aboutPrinciplesTitle: "Editorial principles",
     aboutPrinciples: [
-      "English-first publishing with Chinese support.",
-      "Practical analysis over hype cycles.",
-      "Readable context for technical and product-minded readers.",
+      "Explain blockchain technology in a way builders and operators can use.",
+      "Track the current state of AI with attention to real productivity gains.",
+      "Recommend practical infrastructure: servers, domains, network access, and operational tools.",
     ],
     aboutContactTitle: "Contact",
     aboutContactBody:
@@ -123,10 +128,10 @@ export const uiCopy: Record<
     navHome: "首页",
     navLatest: "最新",
     navAbout: "关于我们",
-    heroKicker: "BSVgo / Blockchain, AI, Infrastructure",
-    heroTitle: "面向下一波建设者的前进型博客。",
+    heroKicker: "BSVgo / 区块链、AI、基础设施",
+    heroTitle: "理解 AI、区块链，以及参与建设所需的基础设施。",
     heroDescription:
-      "以 English 为主，支持中文切换，持续关注区块链、AI 系统以及支撑它们运行的基础设施。",
+      "BSVgo 发布区块链技术文章、AI 资讯文章和服务器、域名、网络工具等基础设施推荐，帮助读者理解趋势并参与开发运营。",
     heroPrimary: "查看最新文章",
     heroSecondary: "按主题浏览",
     featuredKicker: "最新阅读",
@@ -155,16 +160,19 @@ export const uiCopy: Record<
     notFoundHint: "你可以返回最新文章，或通过导航继续浏览区块链、AI 与基础设施内容。",
     aboutTitle: "关于 BSVgo",
     aboutDescription:
-      "BSVgo 为关注区块链、AI 系统以及现代产品基础设施的读者发布实用内容。",
-    aboutKicker: "关于 / 建设者笔记",
-    aboutMissionTitle: "我们写什么",
+      "BSVgo 是一个关于区块链、AI 与基础设施的网站，帮助读者理解技术栈，也帮助想参与建设的人找到实践入口。",
+    aboutKicker: "关于 / AI 需要可追溯的基础设施",
+    aboutMissionTitle: "为什么做这个网站",
     aboutMissionBody:
-      "我们关注对建设者有用的清晰写作：系统如何设计、基础设施选择为什么重要，以及区块链或 AI 的变化如何影响真实产品工作。",
+      "AI 能成倍提高效率，也会带来成倍的收益。但新的价值如果没有清晰的溯源、确权和分配机制，就很难让每个数据制造者和参与者真正受益。BSVgo 把 AI 资讯、区块链技术和基础设施推荐放在一起，帮助读者理解机会，也理解如何参与开发和运营。",
+    aboutBsvTitle: "为什么选择 BSV",
+    aboutBsvBody:
+      "博主认为，AI 需要引入区块链技术来做数据溯源、权利确认和收益分配。区块链可以优化分配，让参与其中的数据制造者获得收益。BSV 的高频交易、低手续费、合规取向和微支付能力，正适合 AI 时代大量、高频、低成本的价值流转。",
     aboutPrinciplesTitle: "内容原则",
     aboutPrinciples: [
-      "以英文发布为主，同时支持中文阅读。",
-      "关注可执行分析，不追逐短期噱头。",
-      "为技术读者和产品建设者提供清晰背景。",
+      "用建设者能理解的方式解释区块链技术。",
+      "持续跟踪 AI 当前的发展状态和真实效率提升。",
+      "推荐开发运营会用到的基础设施：服务器、域名、网络访问和工具。",
     ],
     aboutContactTitle: "联系",
     aboutContactBody:

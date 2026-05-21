@@ -81,7 +81,40 @@ export default async function AboutPage({
             </p>
           </article>
 
-          <aside className="rounded-lg border border-teal-900/10 bg-[rgb(240,253,250)] p-6 shadow-sm sm:p-8">
+          <article className="rounded-lg border border-teal-900/10 bg-[rgb(240,253,250)] p-6 shadow-sm sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              {copy.aboutBsvTitle}
+            </p>
+            <p className="mt-5 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+              {copy.aboutBsvBody}
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="border-b border-emerald-900/10 bg-[rgb(240,253,250)] py-12 sm:py-14">
+        <div className="mx-auto max-w-7xl px-5">
+          <div className="grid gap-4 md:grid-cols-3">
+            {copy.aboutPrinciples.map((principle, index) => (
+              <div
+                key={principle}
+                className="rounded-lg border border-emerald-900/10 bg-white p-5 shadow-sm"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                  {copy.aboutPrinciplesTitle} / 0{index + 1}
+                </p>
+                <p className="mt-4 text-base font-semibold leading-7 text-slate-900">
+                  {principle}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-12 sm:py-14">
+        <div className="mx-auto max-w-7xl px-5">
+          <aside className="max-w-2xl rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] p-6 shadow-sm sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
               {copy.aboutContactTitle}
             </p>
@@ -102,26 +135,6 @@ export default async function AboutPage({
               hello@bsvgo.com
             </a>
           </aside>
-        </div>
-      </section>
-
-      <section className="bg-[rgb(240,253,250)] py-12 sm:py-14">
-        <div className="mx-auto max-w-7xl px-5">
-          <div className="grid gap-4 md:grid-cols-3">
-            {copy.aboutPrinciples.map((principle, index) => (
-              <div
-                key={principle}
-                className="rounded-lg border border-emerald-900/10 bg-white p-5 shadow-sm"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                  {copy.aboutPrinciplesTitle} / 0{index + 1}
-                </p>
-                <p className="mt-4 text-base font-semibold leading-7 text-slate-900">
-                  {principle}
-                </p>
-              </div>
-            ))}
-          </div>
 
           <Link
             href={`/${locale}`}
