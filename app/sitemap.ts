@@ -6,6 +6,8 @@ import {
 } from "@/lib/blog";
 import { locales, siteConfig } from "@/lib/i18n";
 
+export const revalidate = 300;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteConfig.url;
   const routes: MetadataRoute.Sitemap = [];
@@ -19,6 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     routes.push({
       url: `${base}/${locale}`,
+      lastModified: new Date(),
+    });
+
+    routes.push({
+      url: `${base}/${locale}/about`,
       lastModified: new Date(),
     });
 

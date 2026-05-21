@@ -22,6 +22,7 @@ export const uiCopy: Record<
   {
     navHome: string;
     navLatest: string;
+    navAbout: string;
     heroKicker: string;
     heroTitle: string;
     heroDescription: string;
@@ -51,11 +52,21 @@ export const uiCopy: Record<
     notFoundTitle: string;
     notFoundDescription: string;
     notFoundHint: string;
+    aboutTitle: string;
+    aboutDescription: string;
+    aboutKicker: string;
+    aboutMissionTitle: string;
+    aboutMissionBody: string;
+    aboutPrinciplesTitle: string;
+    aboutPrinciples: string[];
+    aboutContactTitle: string;
+    aboutContactBody: string;
   }
 > = {
   en: {
     navHome: "Home",
     navLatest: "Latest",
+    navAbout: "About",
     heroKicker: "BSVgo / Blockchain, AI, Infrastructure",
     heroTitle: "A forward-moving blog for the next wave of builders.",
     heroDescription:
@@ -91,10 +102,27 @@ export const uiCopy: Record<
       "The article, category, or tag may have moved, or the address may be incomplete.",
     notFoundHint:
       "Return to the latest posts or use the navigation to continue exploring blockchain, AI, and infrastructure notes.",
+    aboutTitle: "About BSVgo",
+    aboutDescription:
+      "BSVgo publishes practical notes for readers tracking blockchain, AI systems, and the infrastructure behind modern products.",
+    aboutKicker: "About / Builder notes",
+    aboutMissionTitle: "What we publish",
+    aboutMissionBody:
+      "We focus on clear, useful writing for builders: how systems are designed, where infrastructure choices matter, and what blockchain or AI changes mean in real product work.",
+    aboutPrinciplesTitle: "Editorial principles",
+    aboutPrinciples: [
+      "English-first publishing with Chinese support.",
+      "Practical analysis over hype cycles.",
+      "Readable context for technical and product-minded readers.",
+    ],
+    aboutContactTitle: "Contact",
+    aboutContactBody:
+      "For topic suggestions, partnerships, or corrections, reach the BSVgo team at hello@bsvgo.com.",
   },
   zh: {
     navHome: "首页",
     navLatest: "最新",
+    navAbout: "关于我们",
     heroKicker: "BSVgo / Blockchain, AI, Infrastructure",
     heroTitle: "面向下一波建设者的前进型博客。",
     heroDescription:
@@ -125,5 +153,21 @@ export const uiCopy: Record<
     notFoundTitle: "这个页面暂时无法抵达。",
     notFoundDescription: "文章、分类或标签可能已经移动，也可能是链接地址不完整。",
     notFoundHint: "你可以返回最新文章，或通过导航继续浏览区块链、AI 与基础设施内容。",
+    aboutTitle: "关于 BSVgo",
+    aboutDescription:
+      "BSVgo 为关注区块链、AI 系统以及现代产品基础设施的读者发布实用内容。",
+    aboutKicker: "关于 / 建设者笔记",
+    aboutMissionTitle: "我们写什么",
+    aboutMissionBody:
+      "我们关注对建设者有用的清晰写作：系统如何设计、基础设施选择为什么重要，以及区块链或 AI 的变化如何影响真实产品工作。",
+    aboutPrinciplesTitle: "内容原则",
+    aboutPrinciples: [
+      "以英文发布为主，同时支持中文阅读。",
+      "关注可执行分析，不追逐短期噱头。",
+      "为技术读者和产品建设者提供清晰背景。",
+    ],
+    aboutContactTitle: "联系",
+    aboutContactBody:
+      "如果有选题建议、合作需求或内容更正，可以通过 hello@bsvgo.com 联系 BSVgo 团队。",
   },
 };

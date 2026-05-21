@@ -26,8 +26,8 @@ export async function SiteShell({ locale, children }: SiteShellProps) {
       label: category.name,
     })),
     {
-      href: `/${locale}#latest`,
-      label: copy.navLatest,
+      href: `/${locale}/about`,
+      label: copy.navAbout,
     },
   ];
 
@@ -122,16 +122,15 @@ export async function SiteShell({ locale, children }: SiteShellProps) {
                   </Link>
                 ))}
                 <Link
-                  href={`/${locale}#latest`}
+                  href={`/${locale}/about`}
                   {...buildAnalyticsAttrs({
-                    eventName: "section_jump",
-                    label: copy.navLatest,
-                    href: `/${locale}#latest`,
-                    section: "latest",
-                    targetType: "internal",
+                    eventName: "nav_click",
+                    label: copy.navAbout,
+                    href: `/${locale}/about`,
+                    targetType: "nav",
                   })}
                 >
-                  {copy.navLatest}
+                  {copy.navAbout}
                 </Link>
               </div>
             </div>
