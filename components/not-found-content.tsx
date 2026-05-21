@@ -57,7 +57,7 @@ export function NotFoundContent({ locale }: NotFoundContentProps) {
         </div>
         <div className="relative overflow-hidden rounded-lg border border-emerald-900/10 bg-white p-6 shadow-sm">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-300 via-cyan-300 to-lime-300" />
-          <div className="grid h-48 place-items-center rounded-md bg-[radial-gradient(circle_at_35%_20%,rgba(16,185,129,0.22),transparent_32%),linear-gradient(135deg,rgba(236,253,245,0.98),rgba(240,253,250,0.92))] md:h-64">
+          <div className="grid h-48 place-items-center rounded-md bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(240,253,250,0.92))] md:h-64">
             <Compass className="h-20 w-20 text-emerald-600" strokeWidth={1.4} />
           </div>
           <p className="mt-5 text-sm leading-7 text-slate-600">

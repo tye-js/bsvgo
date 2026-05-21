@@ -42,13 +42,6 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      backgroundImage: {
-        "hero-grid":
-          "radial-gradient(circle at top left, rgba(110, 231, 183, 0.18), transparent 30%), radial-gradient(circle at top right, rgba(125, 211, 252, 0.18), transparent 28%), linear-gradient(135deg, rgba(249, 253, 251, 0.98), rgba(236, 253, 245, 0.9) 46%, rgba(238, 242, 255, 0.92))",
-      },
-      boxShadow: {
-        glow: "0 0 40px rgba(124, 255, 178, 0.16)",
-      },
     },
   },
   plugins: [typography],

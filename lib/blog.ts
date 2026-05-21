@@ -46,6 +46,9 @@ export type LocalizedPost = {
   pinned: boolean;
   mark: string;
   coverImage: string;
+  aiAuthorRole: string | null;
+  aiAuthorName: string | null;
+  aiAuthorAvatar: string | null;
   publishedAt: string;
   categorySlug: string;
   categoryName: string;
@@ -192,6 +195,9 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
         pinned: post.featured,
         mark: post.featured ? "featured" : "",
         coverImage: normalizeCoverImage(post.coverImage, post.categorySlug),
+        aiAuthorRole: null,
+        aiAuthorName: null,
+        aiAuthorAvatar: null,
         publishedAt: post.publishedAt,
         categorySlug: post.categorySlug,
         categoryName: category.translations[locale].name,
@@ -234,6 +240,66 @@ function publishedPostConditions(locale: Locale): SQL[] {
     isNull(postTable.deletedAt),
     isNotNull(postTable.publishedAt),
   ];
+}
+
+function postSelectFields(locale: Locale) {
+  return {
+    slug: postTable.slug,
+    featured: postTable.featured,
+    pinned: postTable.pinned,
+    mark: postTable.mark,
+    coverImage: postTable.coverImage,
+    aiAuthorRole: postTable.aiAuthorRole,
+    aiAuthorName:
+      locale === "zh" ? postTable.aiAuthorZhName : postTable.aiAuthorEnName,
+    aiAuthorAvatar: postTable.aiAuthorAvatar,
+    publishedAt: postTable.publishedAt,
+    categorySlug: categoryTable.slug,
+    categoryName: categoryTranslations.name,
+    tags: sql<LocalizedTagReference[]>`coalesce(
+      jsonb_agg(
+        distinct jsonb_build_object(
+          'slug', ${tagTable.slug},
+          'name', ${tagTable.name}
+        )
+      ) filter (where ${tagTable.id} is not null),
+      '[]'::jsonb
+    )`,
+    title: postTranslations.title,
+    excerpt: postTranslations.excerpt,
+    content: postTranslations.content,
+    readingMinutes: postTranslations.readingMinutes,
+    seoTitle: postTranslations.seoTitle,
+    seoDescription: postTranslations.seoDescription,
+  };
+}
+
+function postGroupByColumns() {
+  return [
+    postTable.id,
+    postTable.slug,
+    postTable.featured,
+    postTable.pinned,
+    postTable.mark,
+    postTable.coverImage,
+    postTable.aiAuthorRole,
+    postTable.aiAuthorZhName,
+    postTable.aiAuthorEnName,
+    postTable.aiAuthorAvatar,
+    postTable.publishedAt,
+    categoryTable.slug,
+    categoryTranslations.name,
+    postTranslations.title,
+    postTranslations.excerpt,
+    postTranslations.content,
+    postTranslations.readingMinutes,
+    postTranslations.seoTitle,
+    postTranslations.seoDescription,
+  ] as const;
+}
+
+function mapPostRows(rows: RawPostRow[]) {
+  return rows.map(mapPostRow);
 }
 
 async function queryCategories(locale: Locale) {
@@ -320,31 +386,7 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
   }
 
   const query = readonlyDb
-    .select({
-      slug: postTable.slug,
-      featured: postTable.featured,
-      pinned: postTable.pinned,
-      mark: postTable.mark,
-      coverImage: postTable.coverImage,
-      publishedAt: postTable.publishedAt,
-      categorySlug: categoryTable.slug,
-      categoryName: categoryTranslations.name,
-      tags: sql<LocalizedTagReference[]>`coalesce(
-        jsonb_agg(
-          distinct jsonb_build_object(
-            'slug', ${tagTable.slug},
-            'name', ${tagTable.name}
-          )
-        ) filter (where ${tagTable.id} is not null),
-        '[]'::jsonb
-      )`,
-      title: postTranslations.title,
-      excerpt: postTranslations.excerpt,
-      content: postTranslations.content,
-      readingMinutes: postTranslations.readingMinutes,
-      seoTitle: postTranslations.seoTitle,
-      seoDescription: postTranslations.seoDescription,
-    })
+    .select(postSelectFields(locale))
     .from(postTable)
     .innerJoin(categoryTable, eq(categoryTable.id, postTable.categoryId))
     .innerJoin(
@@ -358,23 +400,7 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
     .leftJoin(postTags, eq(postTags.postId, postTable.id))
     .leftJoin(tagTable, eq(tagTable.id, postTags.tagId))
     .where(and(...conditions))
-    .groupBy(
-      postTable.id,
-      postTable.slug,
-      postTable.featured,
-      postTable.pinned,
-      postTable.mark,
-      postTable.coverImage,
-      postTable.publishedAt,
-      categoryTable.slug,
-      categoryTranslations.name,
-      postTranslations.title,
-      postTranslations.excerpt,
-      postTranslations.content,
-      postTranslations.readingMinutes,
-      postTranslations.seoTitle,
-      postTranslations.seoDescription
-    )
+    .groupBy(...postGroupByColumns())
     .orderBy(
       options.sort === "oldest"
         ? asc(postTable.publishedAt)
@@ -412,31 +438,7 @@ async function queryPlacedPosts(locale: Locale, options: PlacementQueryOptions) 
   }
 
   const query = readonlyDb
-    .select({
-      slug: postTable.slug,
-      featured: postTable.featured,
-      pinned: postTable.pinned,
-      mark: postTable.mark,
-      coverImage: postTable.coverImage,
-      publishedAt: postTable.publishedAt,
-      categorySlug: categoryTable.slug,
-      categoryName: categoryTranslations.name,
-      tags: sql<LocalizedTagReference[]>`coalesce(
-        jsonb_agg(
-          distinct jsonb_build_object(
-            'slug', ${tagTable.slug},
-            'name', ${tagTable.name}
-          )
-        ) filter (where ${tagTable.id} is not null),
-        '[]'::jsonb
-      )`,
-      title: postTranslations.title,
-      excerpt: postTranslations.excerpt,
-      content: postTranslations.content,
-      readingMinutes: postTranslations.readingMinutes,
-      seoTitle: postTranslations.seoTitle,
-      seoDescription: postTranslations.seoDescription,
-    })
+    .select(postSelectFields(locale))
     .from(postPlacements)
     .innerJoin(postTable, eq(postTable.id, postPlacements.postId))
     .innerJoin(categoryTable, eq(categoryTable.id, postTable.categoryId))
@@ -454,21 +456,7 @@ async function queryPlacedPosts(locale: Locale, options: PlacementQueryOptions) 
     .groupBy(
       postPlacements.id,
       postPlacements.sortOrder,
-      postTable.id,
-      postTable.slug,
-      postTable.featured,
-      postTable.pinned,
-      postTable.mark,
-      postTable.coverImage,
-      postTable.publishedAt,
-      categoryTable.slug,
-      categoryTranslations.name,
-      postTranslations.title,
-      postTranslations.excerpt,
-      postTranslations.content,
-      postTranslations.readingMinutes,
-      postTranslations.seoTitle,
-      postTranslations.seoDescription
+      ...postGroupByColumns()
     )
     .orderBy(asc(postPlacements.sortOrder), desc(postTable.publishedAt))
     .$dynamic();
@@ -542,7 +530,7 @@ export const getLocalizedCategoryBySlug = cache(
 export const getLocalizedPosts = cache(
   async (locale: Locale): Promise<LocalizedPost[]> => {
     try {
-      return (await queryPosts(locale)).map(mapPostRow);
+      return mapPostRows(await queryPosts(locale));
     } catch (error) {
       logDatabaseFallback(`posts:${locale}`, error);
       return getFallbackPosts(locale);
@@ -565,7 +553,7 @@ export const getLocalizedPostBySlug = cache(
 export const getLocalizedPostsByCategorySlug = cache(
   async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
     try {
-      return (await queryPosts(locale, { categorySlug: slug })).map(mapPostRow);
+      return mapPostRows(await queryPosts(locale, { categorySlug: slug }));
     } catch (error) {
       logDatabaseFallback(`category-posts:${locale}:${slug}`, error);
       return getFallbackPosts(locale).filter((post) => post.categorySlug === slug);
@@ -576,7 +564,7 @@ export const getLocalizedPostsByCategorySlug = cache(
 export const getLocalizedPostsByTagSlug = cache(
   async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
     try {
-      return (await queryPosts(locale, { tagSlug: slug })).map(mapPostRow);
+      return mapPostRows(await queryPosts(locale, { tagSlug: slug }));
     } catch (error) {
       logDatabaseFallback(`tag-posts:${locale}:${slug}`, error);
       return getFallbackPosts(locale).filter((post) =>
@@ -586,56 +574,67 @@ export const getLocalizedPostsByTagSlug = cache(
   }
 );
 
+async function queryPlacementWithLegacy(
+  locale: Locale,
+  placementOptions: PlacementQueryOptions,
+  legacyOptions: PostQueryOptions,
+  scope: string
+) {
+  let placedPosts: RawPostRow[] = [];
+
+  try {
+    placedPosts = await queryPlacedPosts(locale, placementOptions);
+  } catch (error) {
+    logDatabaseFallback(`${scope}:placements`, error);
+  }
+
+  if (placedPosts.length > 0) {
+    return placedPosts;
+  }
+
+  return queryPosts(locale, legacyOptions);
+}
+
 export const getFeaturedPost = cache(async (locale: Locale) => {
   try {
-    const [placedPost] = await queryPlacedPosts(locale, {
-      scope: "home",
-      slot: "featured",
-      limit: 1,
-    });
+    const [post] = await queryPlacementWithLegacy(
+      locale,
+      {
+        scope: "home",
+        slot: "featured",
+        limit: 1,
+      },
+      { pinned: true, limit: 1 },
+      `home-featured:${locale}`
+    );
 
-    if (placedPost) {
-      return mapPostRow(placedPost);
-    }
-
-    const [legacyPost] = await queryPosts(locale, { pinned: true, limit: 1 });
-    return legacyPost ? mapPostRow(legacyPost) : null;
+    return post ? mapPostRow(post) : null;
   } catch (error) {
     logDatabaseFallback(`home-featured:${locale}`, error);
-    try {
-      const [post] = await queryPosts(locale, { pinned: true, limit: 1 });
-      return post ? mapPostRow(post) : null;
-    } catch {
-      return getFallbackPosts(locale).find((post) => post.pinned) ?? null;
-    }
+    return getFallbackPosts(locale).find((post) => post.pinned) ?? null;
   }
 });
 
 export const getSponsoredPosts = cache(
   async (locale: Locale, limit = 5): Promise<LocalizedPost[]> => {
     try {
-      const placedPosts = (
-        await queryPlacedPosts(locale, {
-          scope: "home",
-          slot: "promoted",
-          limit,
-        })
-      ).map(mapPostRow);
-
-      if (placedPosts.length > 0) {
-        return placedPosts;
-      }
-
-      return (await queryPosts(locale, { mark: "sponsored", limit })).map(mapPostRow);
+      return mapPostRows(
+        await queryPlacementWithLegacy(
+          locale,
+          {
+            scope: "home",
+            slot: "promoted",
+            limit,
+          },
+          { mark: "sponsored", limit },
+          `home-promoted:${locale}`
+        )
+      );
     } catch (error) {
       logDatabaseFallback(`home-promoted:${locale}`, error);
-      try {
-        return (await queryPosts(locale, { mark: "sponsored", limit })).map(mapPostRow);
-      } catch {
-        return getFallbackPosts(locale)
-          .filter((post) => post.mark === "sponsored")
-          .slice(0, limit);
-      }
+      return getFallbackPosts(locale)
+        .filter((post) => post.mark === "sponsored")
+        .slice(0, limit);
     }
   }
 );
@@ -643,39 +642,30 @@ export const getSponsoredPosts = cache(
 export const getCategoryFeaturedPost = cache(
   async (locale: Locale, categorySlug: string): Promise<LocalizedPost | null> => {
     try {
-      const [placedPost] = await queryPlacedPosts(locale, {
-        scope: "category",
-        slot: "featured",
-        categorySlug,
-        limit: 1,
-      });
-
-      if (placedPost) {
-        return mapPostRow(placedPost);
-      }
-
-      const [legacyPost] = await queryPosts(locale, {
-        categorySlug,
-        featured: true,
-        limit: 1,
-      });
-      return legacyPost ? mapPostRow(legacyPost) : null;
-    } catch (error) {
-      logDatabaseFallback(`category-featured:${locale}:${categorySlug}`, error);
-      try {
-        const [post] = await queryPosts(locale, {
+      const [post] = await queryPlacementWithLegacy(
+        locale,
+        {
+          scope: "category",
+          slot: "featured",
+          categorySlug,
+          limit: 1,
+        },
+        {
           categorySlug,
           featured: true,
           limit: 1,
-        });
-        return post ? mapPostRow(post) : null;
-      } catch {
-        return (
-          getFallbackPosts(locale).find(
-            (post) => post.categorySlug === categorySlug && post.featured
-          ) ?? null
-        );
-      }
+        },
+        `category-featured:${locale}:${categorySlug}`
+      );
+
+      return post ? mapPostRow(post) : null;
+    } catch (error) {
+      logDatabaseFallback(`category-featured:${locale}:${categorySlug}`, error);
+      return (
+        getFallbackPosts(locale).find(
+          (post) => post.categorySlug === categorySlug && post.featured
+        ) ?? null
+      );
     }
   }
 );
@@ -687,44 +677,31 @@ export const getCategoryPromotedPosts = cache(
     limit = 5
   ): Promise<LocalizedPost[]> => {
     try {
-      const placedPosts = (
-        await queryPlacedPosts(locale, {
-          scope: "category",
-          slot: "promoted",
-          categorySlug,
-          limit,
-        })
-      ).map(mapPostRow);
-
-      if (placedPosts.length > 0) {
-        return placedPosts;
-      }
-
-      return (
-        await queryPosts(locale, {
-          categorySlug,
-          mark: "sponsored",
-          limit,
-        })
-      ).map(mapPostRow);
-    } catch (error) {
-      logDatabaseFallback(`category-promoted:${locale}:${categorySlug}`, error);
-      try {
-        return (
-          await queryPosts(locale, {
+      return mapPostRows(
+        await queryPlacementWithLegacy(
+          locale,
+          {
+            scope: "category",
+            slot: "promoted",
+            categorySlug,
+            limit,
+          },
+          {
             categorySlug,
             mark: "sponsored",
             limit,
-          })
-        ).map(mapPostRow);
-      } catch {
-        return getFallbackPosts(locale)
-          .filter(
-            (post) =>
-              post.categorySlug === categorySlug && post.mark === "sponsored"
-          )
-          .slice(0, limit);
-      }
+          },
+          `category-promoted:${locale}:${categorySlug}`
+        )
+      );
+    } catch (error) {
+      logDatabaseFallback(`category-promoted:${locale}:${categorySlug}`, error);
+      return getFallbackPosts(locale)
+        .filter(
+          (post) =>
+            post.categorySlug === categorySlug && post.mark === "sponsored"
+        )
+        .slice(0, limit);
     }
   }
 );
@@ -761,13 +738,13 @@ export const getRelatedPosts = cache(
     }
 
     try {
-      const candidates = (
+      const candidates = mapPostRows(
         await queryPosts(locale, {
           excludeSlug: slug,
           categorySlug: current.categorySlug,
           limit: Math.max(limit * 3, limit),
         })
-      ).map(mapPostRow);
+      );
       const tagSlugs = new Set(current.tags.map((tag) => tag.slug));
       const scored = candidates
         .map((post) => {
@@ -793,12 +770,12 @@ export const getRelatedPosts = cache(
         return scored;
       }
 
-      return (
+      return mapPostRows(
         await queryPosts(locale, {
           excludeSlug: slug,
           limit,
         })
-      ).map(mapPostRow);
+      );
     } catch (error) {
       logDatabaseFallback(`related:${locale}:${slug}`, error);
     }

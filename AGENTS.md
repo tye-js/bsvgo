@@ -72,6 +72,13 @@ The main blog pages are intentionally dynamic so newly added database content ca
 - `db/schema.ts`: Drizzle schema
 - `.github/workflows/bsvgo.yml`: VPS deployment workflow
 
+## Design Rules
+
+- 深模块 (Design Deep Modules)
+- 消除错误（Define Errors Out of Existence）
+- 向下沉淀复杂性 （Pull Complexity Downwards）
+- 不同层不同抽象（Different Layer, Different Abstraction)
+
 ## Design Direction
 
 Keep the visual style consistent:

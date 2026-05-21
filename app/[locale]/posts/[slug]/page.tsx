@@ -1,17 +1,38 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
+import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
-import { getRenderableImageSrc } from "@/lib/cover-art";
+import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { formatDate } from "@/lib/format";
 import { Locale, locales, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
+
+const renderableAvatarHosts = new Set(["cms.bsvgo.com", "images.unsplash.com"]);
+
+function getRenderableAvatarSrc(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith("/")) {
+    return value;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && renderableAvatarHosts.has(url.hostname)
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -68,6 +89,17 @@ export default async function PostPage({
     notFound();
   }
 
+  const authorName = post.aiAuthorName?.trim();
+  const authorRole = post.aiAuthorRole?.trim();
+  const authorAvatar = getRenderableAvatarSrc(post.aiAuthorAvatar?.trim());
+  const heroImageFallback = createCoverArtDataUri({
+    title: post.title,
+    label: post.categoryName,
+    subtitle: post.excerpt,
+    categorySlug: post.categorySlug,
+    variant: "hero",
+  });
+
   return (
     <main className="bg-[rgb(249,251,250)]">
       <div className="mx-auto max-w-7xl px-5 py-6 lg:py-10">
@@ -78,7 +110,7 @@ export default async function PostPage({
           >
             <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
               <div className="relative min-h-[420px] overflow-hidden bg-emerald-50 sm:min-h-[470px] lg:min-h-[520px]">
-                <Image
+                <SafeImage
                   src={getRenderableImageSrc(post.coverImage, {
                     title: post.title,
                     label: post.categoryName,
@@ -86,6 +118,7 @@ export default async function PostPage({
                     categorySlug: post.categorySlug,
                     variant: "hero",
                   })}
+                  fallbackSrc={heroImageFallback}
                   alt=""
                   fill
                   sizes="(max-width: 1024px) 100vw, 900px"
@@ -94,7 +127,7 @@ export default async function PostPage({
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(236,253,245,0.12)_0%,rgba(249,251,250,0.05)_38%,rgba(249,251,250,0.26)_64%,rgba(249,251,250,0.96)_100%)]" />
                 <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-7 sm:pb-7 lg:px-10 lg:pb-10">
-                  <div className="max-w-3xl rounded-2xl border border-white/40 bg-white/65 p-5 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-6 lg:p-7">
+                  <div className="max-w-3xl rounded-lg border border-white/40 bg-white/65 p-5 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-6 lg:p-7">
                     <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
                       {post.title}
                     </h1>
@@ -105,13 +138,49 @@ export default async function PostPage({
                 </div>
               </div>
               <div className="flex flex-col gap-4 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-                <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                  <span>
-                    {copy.publishedOn} {formatDate(post.publishedAt, locale)}
-                  </span>
-                  <span>
-                    {post.readingMinutes} {copy.readingTime}
-                  </span>
+                <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+                  {authorName || authorAvatar ? (
+                    <div className="flex items-center gap-3">
+                      <div className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-emerald-900/10 bg-emerald-50 text-sm font-semibold text-emerald-700">
+                        {authorAvatar ? (
+                          <SafeImage
+                            src={authorAvatar}
+                            fallbackSrc={createCoverArtDataUri({
+                              title: authorName ?? "AI",
+                              label: authorRole ?? "AI",
+                              variant: "compact",
+                            })}
+                            alt={authorName ?? ""}
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span>{(authorName ?? "AI").slice(0, 2)}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {authorName ? (
+                          <p className="truncate text-sm font-semibold text-slate-950">
+                            {authorName}
+                          </p>
+                        ) : null}
+                        {authorRole ? (
+                          <p className="truncate text-xs font-medium uppercase tracking-[0.16em] text-emerald-700">
+                            {authorRole}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                    <span>
+                      {copy.publishedOn} {formatDate(post.publishedAt, locale)}
+                    </span>
+                    <span>
+                      {post.readingMinutes} {copy.readingTime}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(post.tags ?? []).map((tag) => (
@@ -211,8 +280,15 @@ export default async function PostPage({
                       className="group overflow-hidden rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] transition hover:border-emerald-300"
                     >
                       <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
-                        <Image
+                        <SafeImage
                           src={getRenderableImageSrc(related.coverImage, {
+                            title: related.title,
+                            label: related.categoryName,
+                            subtitle: related.excerpt,
+                            categorySlug: related.categorySlug,
+                            variant: "card",
+                          })}
+                          fallbackSrc={createCoverArtDataUri({
                             title: related.title,
                             label: related.categoryName,
                             subtitle: related.excerpt,
@@ -266,8 +342,15 @@ export default async function PostPage({
                     className="overflow-hidden rounded-md border border-slate-200 bg-[rgb(249,251,250)]"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-emerald-50">
-                      <Image
+                      <SafeImage
                         src={getRenderableImageSrc(item.image, {
+                          title: item.title,
+                          label: item.category,
+                          subtitle: item.description,
+                          categorySlug: item.category,
+                          variant: "compact",
+                        })}
+                        fallbackSrc={createCoverArtDataUri({
                           title: item.title,
                           label: item.category,
                           subtitle: item.description,

@@ -43,6 +43,13 @@
       "when": 1779224400000,
       "tag": "0005_post_placements",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779307200000,
+      "tag": "0006_post_ai_author",
+      "breakpoints": true
     }
   ]
 }

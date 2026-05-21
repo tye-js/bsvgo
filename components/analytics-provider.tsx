@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Locale } from "@/lib/i18n";
 import { isAnalyticsEventName } from "@/lib/analytics";
 import {
-  type AnalyticsIds,
   createAnalyticsIds,
   getArticleSlugFromPathname,
   sendAnalyticsEvent,
@@ -65,16 +64,9 @@ export function AnalyticsProvider({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [ids, setIds] = useState<AnalyticsIds | null>(null);
 
   useEffect(() => {
-    setIds(createAnalyticsIds());
-  }, []);
-
-  useEffect(() => {
-    if (!ids) {
-      return;
-    }
+    const ids = createAnalyticsIds();
 
     const trackPageView = () => {
       sendAnalyticsEvent({
@@ -108,12 +100,10 @@ export function AnalyticsProvider({
         },
       });
     }
-  }, [ids, locale, pathname]);
+  }, [locale, pathname]);
 
   useEffect(() => {
-    if (!ids) {
-      return;
-    }
+    const ids = createAnalyticsIds();
 
     const seenSections = readSeenSections();
     const seenDepths = readSeenDepths();
@@ -235,7 +225,7 @@ export function AnalyticsProvider({
       window.removeEventListener("click", onClick, true);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [ids, locale]);
+  }, [locale]);
 
   return <div data-analytics-locale={locale}>{children}</div>;
 }

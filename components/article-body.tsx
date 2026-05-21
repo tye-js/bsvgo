@@ -1,5 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import { SafeImage } from "@/components/safe-image";
+import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -128,7 +130,7 @@ const markdownComponents: Components = {
   ),
   blockquote: ({ children, ...props }) => (
     <blockquote
-      className="my-8 rounded-2xl border border-emerald-900/10 bg-emerald-50/70 px-5 py-4 text-slate-700 shadow-sm sm:px-6"
+      className="my-8 rounded-lg border border-emerald-900/10 bg-emerald-50/70 px-5 py-4 text-slate-700 shadow-sm sm:px-6"
       {...props}
     >
       <div className="text-[0.95rem] leading-8">{children}</div>
@@ -149,7 +151,7 @@ const markdownComponents: Components = {
       {children}
     </code>
   ),
-  pre: ({ children, ...props }) => {
+  pre: ({ children }) => {
     const codeElement = isValidElement(children)
       ? (children as ReactElement<{
           className?: string;
@@ -163,7 +165,7 @@ const markdownComponents: Components = {
     const codeLines = rawCode.length > 0 ? rawCode.split("\n") : [" "];
 
     return (
-      <div className="my-8 overflow-hidden rounded-2xl border border-[#2d2d2d] bg-[#1e1e1e] shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
+      <div className="my-8 overflow-hidden rounded-lg border border-[#2d2d2d] bg-[#1e1e1e] shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
         <div className="flex items-center justify-between border-b border-white/10 bg-[#252526] px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -197,18 +199,39 @@ const markdownComponents: Components = {
       </div>
     );
   },
-  img: ({ alt, ...props }) => (
-    <figure className="my-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <img alt={alt ?? ""} className="h-auto w-full object-cover" loading="lazy" {...props} />
-      {alt ? (
-        <figcaption className="px-4 py-3 text-sm leading-6 text-slate-500">
-          {alt}
-        </figcaption>
-      ) : null}
-    </figure>
-  ),
+  img: ({ alt, src }) => {
+    const fallbackSrc = createCoverArtDataUri({
+      title: alt ?? "BSVgo",
+      label: "BSVgo",
+      variant: "card",
+    });
+
+    return (
+      <figure className="my-8 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="relative aspect-[16/9] bg-emerald-50">
+          <SafeImage
+            src={getRenderableImageSrc(typeof src === "string" ? src : null, {
+              title: alt ?? "BSVgo",
+              label: "BSVgo",
+              variant: "card",
+            })}
+            fallbackSrc={fallbackSrc}
+            alt={alt ?? ""}
+            fill
+            sizes="(max-width: 768px) 100vw, 760px"
+            className="object-cover"
+          />
+        </div>
+        {alt ? (
+          <figcaption className="px-4 py-3 text-sm leading-6 text-slate-500">
+            {alt}
+          </figcaption>
+        ) : null}
+      </figure>
+    );
+  },
   table: ({ children, ...props }) => (
-    <div className="my-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="my-8 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
       <table className="w-full border-collapse text-left text-sm text-slate-700" {...props}>
         {children}
       </table>
@@ -239,7 +262,7 @@ const markdownComponents: Components = {
 
 export function ArticleBody({ content }: { content: string }) {
   return (
-    <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-2xl prose-img:shadow-sm">
+    <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
       <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
     </div>
   );
