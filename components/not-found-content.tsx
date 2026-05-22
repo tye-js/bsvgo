@@ -41,17 +41,16 @@ export function NotFoundContent({ locale }: NotFoundContentProps) {
               {copy.backToHome}
             </Link>
             <Link
-              href={`/${locale}#latest`}
+              href={`/${locale}/archive`}
               {...buildAnalyticsAttrs({
-                eventName: "section_jump",
-                label: copy.navLatest,
-                href: `/${locale}#latest`,
-                section: "latest",
-                targetType: "internal",
+                eventName: "nav_click",
+                label: copy.navArchive,
+                href: `/${locale}/archive`,
+                targetType: "nav",
               })}
               className="inline-flex items-center gap-2 rounded-md border border-emerald-900/15 bg-white px-5 py-3 font-semibold text-slate-800 transition hover:border-emerald-500 hover:text-emerald-700"
             >
-              {copy.navLatest}
+              {copy.navArchive}
             </Link>
           </div>
         </div>

@@ -99,13 +99,12 @@ export async function HomePage({ locale }: { locale: Locale }) {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href={`/${locale}#latest`}
+                href={`/${locale}/archive`}
                 {...buildAnalyticsAttrs({
-                  eventName: "section_jump",
+                  eventName: "nav_click",
                   label: copy.heroPrimary,
-                  href: `/${locale}#latest`,
-                  section: "home-hero",
-                  targetType: "internal",
+                  href: `/${locale}/archive`,
+                  targetType: "nav",
                 })}
                 className="inline-flex items-center justify-center rounded-md bg-emerald-200 px-5 py-3 font-semibold text-slate-900 transition hover:bg-emerald-100"
               >
@@ -221,14 +220,13 @@ export async function HomePage({ locale }: { locale: Locale }) {
         eyebrow="latest"
         title={copy.latestTitle}
         description={copy.latestDescription}
-        actionHref={`/${locale}#latest`}
+        actionHref={`/${locale}/archive`}
         actionLabel={copy.viewAll}
         actionAnalytics={{
-          eventName: "section_jump",
+          eventName: "nav_click",
           label: copy.viewAll,
-          href: `/${locale}#latest`,
-          section: "latest",
-          targetType: "internal",
+          href: `/${locale}/archive`,
+          targetType: "nav",
         }}
       >
         {latestPosts.map((post) => (

@@ -22,6 +22,7 @@ export const uiCopy: Record<
   {
     navHome: string;
     navLatest: string;
+    navArchive: string;
     navAbout: string;
     heroKicker: string;
     heroTitle: string;
@@ -40,6 +41,20 @@ export const uiCopy: Record<
     categoryArchiveTitle: string;
     categoryArchiveDescription: string;
     relatedTitle: string;
+    archiveKicker: string;
+    archiveTitle: string;
+    archiveDescription: string;
+    archiveSearchLabel: string;
+    archiveSearchPlaceholder: string;
+    archiveCategoryLabel: string;
+    archiveAllCategories: string;
+    archiveTagLabel: string;
+    archiveAllTags: string;
+    archiveSubmit: string;
+    archiveClear: string;
+    archiveResults: string;
+    archiveEmptyTitle: string;
+    archiveEmptyDescription: string;
     tagArchiveTitle: string;
     tagCountLabel: string;
     readMore: string;
@@ -68,6 +83,7 @@ export const uiCopy: Record<
   en: {
     navHome: "Home",
     navLatest: "Latest",
+    navArchive: "Archive",
     navAbout: "About",
     heroKicker: "BSVgo / Blockchain, AI, Infrastructure",
     heroTitle: "Understand AI, blockchain, and the infrastructure to build with both.",
@@ -90,6 +106,22 @@ export const uiCopy: Record<
     categoryArchiveDescription:
       "The strongest recent posts from the same topic, ordered by freshness.",
     relatedTitle: "Recommended articles",
+    archiveKicker: "Archive",
+    archiveTitle: "Search the BSVgo archive",
+    archiveDescription:
+      "Browse published posts by keyword, category, and tag across blockchain, AI, and infrastructure.",
+    archiveSearchLabel: "Search",
+    archiveSearchPlaceholder: "Title, summary, tag...",
+    archiveCategoryLabel: "Category",
+    archiveAllCategories: "All categories",
+    archiveTagLabel: "Tag",
+    archiveAllTags: "All tags",
+    archiveSubmit: "Search",
+    archiveClear: "Clear filters",
+    archiveResults: "results",
+    archiveEmptyTitle: "No matching articles.",
+    archiveEmptyDescription:
+      "Try a broader keyword, remove a category filter, or browse the latest posts from the archive.",
     tagArchiveTitle: "Tag archive",
     tagCountLabel: "articles",
     readMore: "Read more",
@@ -127,6 +159,7 @@ export const uiCopy: Record<
   zh: {
     navHome: "首页",
     navLatest: "最新",
+    navArchive: "归档",
     navAbout: "关于我们",
     heroKicker: "BSVgo / 区块链、AI、基础设施",
     heroTitle: "理解 AI、区块链，以及参与建设所需的基础设施。",
@@ -146,6 +179,22 @@ export const uiCopy: Record<
     categoryArchiveTitle: "本分类更多文章",
     categoryArchiveDescription: "同一主题下最新、最值得读的文章，按时间排序。",
     relatedTitle: "推荐文章",
+    archiveKicker: "文章归档",
+    archiveTitle: "搜索 BSVgo 文章",
+    archiveDescription:
+      "按关键词、分类和标签浏览已发布文章，覆盖区块链、AI 与基础设施。",
+    archiveSearchLabel: "搜索",
+    archiveSearchPlaceholder: "标题、摘要、标签...",
+    archiveCategoryLabel: "分类",
+    archiveAllCategories: "全部分类",
+    archiveTagLabel: "标签",
+    archiveAllTags: "全部标签",
+    archiveSubmit: "搜索",
+    archiveClear: "清空筛选",
+    archiveResults: "条结果",
+    archiveEmptyTitle: "没有匹配的文章。",
+    archiveEmptyDescription:
+      "可以换一个更宽泛的关键词，或移除分类、标签筛选后再查看。",
     tagArchiveTitle: "标签归档",
     tagCountLabel: "篇文章",
     readMore: "阅读全文",

@@ -26,6 +26,10 @@ export async function SiteShell({ locale, children }: SiteShellProps) {
       label: category.name,
     })),
     {
+      href: `/${locale}/archive`,
+      label: copy.navArchive,
+    },
+    {
       href: `/${locale}/about`,
       label: copy.navAbout,
     },
@@ -121,6 +125,17 @@ export async function SiteShell({ locale, children }: SiteShellProps) {
                     {category.name}
                   </Link>
                 ))}
+                <Link
+                  href={`/${locale}/archive`}
+                  {...buildAnalyticsAttrs({
+                    eventName: "nav_click",
+                    label: copy.navArchive,
+                    href: `/${locale}/archive`,
+                    targetType: "nav",
+                  })}
+                >
+                  {copy.navArchive}
+                </Link>
                 <Link
                   href={`/${locale}/about`}
                   {...buildAnalyticsAttrs({

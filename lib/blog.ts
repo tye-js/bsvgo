@@ -50,6 +50,7 @@ export type LocalizedPost = {
   aiAuthorName: string | null;
   aiAuthorAvatar: string | null;
   publishedAt: string;
+  updatedAt: string;
   categorySlug: string;
   categoryName: string;
   title: string;
@@ -78,9 +79,13 @@ const fallbackCoverImages: Record<string, string> = {
     "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80",
 };
 
-type RawPostRow = Omit<LocalizedPost, "publishedAt" | "tags" | "coverImage"> & {
+type RawPostRow = Omit<
+  LocalizedPost,
+  "publishedAt" | "updatedAt" | "tags" | "coverImage"
+> & {
   coverImage: string | null;
   publishedAt: Date | null;
+  updatedAt: Date | null;
   tags: unknown;
 };
 
@@ -94,8 +99,15 @@ type PostQueryOptions = {
   mark?: string;
   afterPublishedAt?: Date;
   beforePublishedAt?: Date;
+  search?: string;
   sort?: "newest" | "oldest";
   limit?: number;
+};
+
+export type PostSearchOptions = {
+  search?: string;
+  categorySlug?: string;
+  tagSlug?: string;
 };
 
 type PlacementQueryOptions = {
@@ -199,6 +211,7 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
         aiAuthorName: null,
         aiAuthorAvatar: null,
         publishedAt: post.publishedAt,
+        updatedAt: post.publishedAt,
         categorySlug: post.categorySlug,
         categoryName: category.translations[locale].name,
         tags: post.tags.map(tagToReference),
@@ -229,6 +242,10 @@ function mapPostRow(row: RawPostRow): LocalizedPost {
     ...row,
     coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
     publishedAt: row.publishedAt?.toISOString() ?? new Date().toISOString(),
+    updatedAt:
+      row.updatedAt?.toISOString() ??
+      row.publishedAt?.toISOString() ??
+      new Date().toISOString(),
     tags: normalizeTags(row.tags),
   };
 }
@@ -254,6 +271,7 @@ function postSelectFields(locale: Locale) {
       locale === "zh" ? postTable.aiAuthorZhName : postTable.aiAuthorEnName,
     aiAuthorAvatar: postTable.aiAuthorAvatar,
     publishedAt: postTable.publishedAt,
+    updatedAt: postTable.updatedAt,
     categorySlug: categoryTable.slug,
     categoryName: categoryTranslations.name,
     tags: sql<LocalizedTagReference[]>`coalesce(
@@ -287,6 +305,7 @@ function postGroupByColumns() {
     postTable.aiAuthorEnName,
     postTable.aiAuthorAvatar,
     postTable.publishedAt,
+    postTable.updatedAt,
     categoryTable.slug,
     categoryTranslations.name,
     postTranslations.title,
@@ -383,6 +402,25 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
 
   if (options.beforePublishedAt) {
     conditions.push(lt(postTable.publishedAt, options.beforePublishedAt));
+  }
+
+  const search = options.search?.trim();
+
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(sql`(
+      ${postTranslations.title} ilike ${pattern}
+      or ${postTranslations.excerpt} ilike ${pattern}
+      or ${categoryTranslations.name} ilike ${pattern}
+      or exists (
+        select 1
+        from "post_tags" as "search_post_tags"
+        inner join "tags" as "search_tags"
+          on "search_tags"."id" = "search_post_tags"."tag_id"
+        where "search_post_tags"."post_id" = ${postTable.id}
+          and "search_tags"."name" ilike ${pattern}
+      )
+    )`);
   }
 
   const query = readonlyDb
@@ -570,6 +608,50 @@ export const getLocalizedPostsByTagSlug = cache(
       return getFallbackPosts(locale).filter((post) =>
         post.tags.some((tag) => tag.slug === slug)
       );
+    }
+  }
+);
+
+export const searchLocalizedPosts = cache(
+  async (
+    locale: Locale,
+    options: PostSearchOptions = {}
+  ): Promise<LocalizedPost[]> => {
+    const search = options.search?.trim();
+    const categorySlug = options.categorySlug?.trim();
+    const tagSlug = options.tagSlug?.trim();
+
+    try {
+      return mapPostRows(
+        await queryPosts(locale, {
+          search,
+          categorySlug: categorySlug || undefined,
+          tagSlug: tagSlug || undefined,
+        })
+      );
+    } catch (error) {
+      logDatabaseFallback(`search:${locale}`, error);
+      const needle = search?.toLowerCase();
+
+      return getFallbackPosts(locale).filter((post) => {
+        const matchesCategory =
+          !categorySlug || post.categorySlug === categorySlug;
+        const matchesTag =
+          !tagSlug || post.tags.some((tag) => tag.slug === tagSlug);
+        const matchesSearch =
+          !needle ||
+          [
+            post.title,
+            post.excerpt,
+            post.categoryName,
+            ...post.tags.map((tag) => tag.name),
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(needle);
+
+        return matchesCategory && matchesTag && matchesSearch;
+      });
     }
   }
 );

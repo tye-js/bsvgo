@@ -29,6 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
     });
 
+    routes.push({
+      url: `${base}/${locale}/archive`,
+      lastModified: new Date(),
+    });
+
     for (const category of categories) {
       routes.push({
         url: `${base}/${locale}/category/${category.slug}`,

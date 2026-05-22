@@ -5,15 +5,20 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
+import type { LocalizedPostWithNeighbors } from "@/lib/blog";
 import { getPostData, getRelatedPosts } from "@/lib/blog";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { formatDate } from "@/lib/format";
-import { Locale, locales, uiCopy } from "@/lib/i18n";
+import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
 
 const renderableAvatarHosts = new Set(["cms.bsvgo.com", "images.unsplash.com"]);
+
+function absoluteUrl(path: string) {
+  return new URL(path, siteConfig.url).toString();
+}
 
 function getRenderableAvatarSrc(value: string | undefined) {
   if (!value) {
@@ -51,22 +56,143 @@ export async function generateMetadata({
     return {};
   }
 
+  const url = absoluteUrl(`/${locale}/posts/${slug}`);
+  const image = getRenderableImageSrc(post.coverImage, {
+    title: post.title,
+    label: post.categoryName,
+    subtitle: post.excerpt,
+    categorySlug: post.categorySlug,
+    variant: "hero",
+  });
+  const absoluteImage = image.startsWith("http")
+    ? image
+    : createCoverArtDataUri({
+        title: post.title,
+        label: post.categoryName,
+        subtitle: post.excerpt,
+        categorySlug: post.categorySlug,
+        variant: "hero",
+      });
+
   return {
     title: post.seoTitle,
     description: post.seoDescription,
     alternates: {
-      canonical: `/${locale}/posts/${slug}`,
+      canonical: url,
       languages: {
-        en: `/en/posts/${slug}`,
-        zh: `/zh/posts/${slug}`,
+        en: absoluteUrl(`/en/posts/${slug}`),
+        zh: absoluteUrl(`/zh/posts/${slug}`),
       },
     },
     openGraph: {
       title: post.seoTitle,
       description: post.seoDescription,
+      url,
       type: "article",
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt,
+      authors: [post.aiAuthorName?.trim() || siteConfig.name],
+      section: post.categoryName,
+      tags: post.tags.map((tag) => tag.name),
+      images: [
+        {
+          url: absoluteImage,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.seoTitle,
+      description: post.seoDescription,
+      images: [absoluteImage],
     },
   };
+}
+
+function buildPostJsonLd({
+  locale,
+  post,
+}: {
+  locale: Locale;
+  post: LocalizedPostWithNeighbors;
+}) {
+  const postPath = `/${locale}/posts/${post.slug}`;
+  const postUrl = absoluteUrl(postPath);
+  const categoryUrl = absoluteUrl(`/${locale}/category/${post.categorySlug}`);
+  const image = getRenderableImageSrc(post.coverImage, {
+    title: post.title,
+    label: post.categoryName,
+    subtitle: post.excerpt,
+    categorySlug: post.categorySlug,
+    variant: "hero",
+  });
+  const imageUrl = image.startsWith("http")
+    ? image
+    : createCoverArtDataUri({
+        title: post.title,
+        label: post.categoryName,
+        subtitle: post.excerpt,
+        categorySlug: post.categorySlug,
+        variant: "hero",
+      });
+  const authorName = post.aiAuthorName?.trim() || siteConfig.name;
+  const authorRole = post.aiAuthorRole?.trim();
+  const authorAvatar = getRenderableAvatarSrc(post.aiAuthorAvatar?.trim());
+  const article = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${postUrl}#article`,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+    headline: post.title,
+    description: post.seoDescription || post.excerpt,
+    image: [imageUrl],
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt,
+    inLanguage: locale,
+    articleSection: post.categoryName,
+    keywords: post.tags.map((tag) => tag.name),
+    author: {
+      "@type": "Person",
+      name: authorName,
+      ...(authorRole ? { jobTitle: authorRole } : {}),
+      ...(authorAvatar ? { image: authorAvatar } : {}),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+  };
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "BSVgo",
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: post.categoryName,
+        item: categoryUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: post.title,
+        item: postUrl,
+      },
+    ],
+  };
+
+  return [article, breadcrumb];
 }
 
 export default async function PostPage({
@@ -99,9 +225,14 @@ export default async function PostPage({
     categorySlug: post.categorySlug,
     variant: "hero",
   });
+  const jsonLd = buildPostJsonLd({ locale, post });
 
   return (
     <main className="bg-[rgb(249,251,250)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-7xl px-5 py-6 lg:py-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <article
