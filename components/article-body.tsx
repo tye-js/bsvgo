@@ -2,6 +2,7 @@ import { isValidElement, type ReactElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { SafeImage } from "@/components/safe-image";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
+import { siteConfig } from "@/lib/i18n";
 
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -50,6 +51,25 @@ function getLanguageLabel(className?: string) {
   return labels[language] ?? language.toUpperCase();
 }
 
+function isExternalHref(href: string | undefined) {
+  if (!href) {
+    return false;
+  }
+
+  if (href.startsWith("/") || href.startsWith("#")) {
+    return false;
+  }
+
+  try {
+    const target = new URL(href, siteConfig.url);
+    const site = new URL(siteConfig.url);
+
+    return target.origin !== site.origin;
+  } catch {
+    return false;
+  }
+}
+
 const markdownComponents: Components = {
   h1: ({ children, ...props }) => (
     <h1
@@ -89,7 +109,7 @@ const markdownComponents: Components = {
     </p>
   ),
   a: ({ children, href, ...props }) => {
-    const isExternal = typeof href === "string" && href.startsWith("http");
+    const isExternal = isExternalHref(href);
 
     return (
       <a
