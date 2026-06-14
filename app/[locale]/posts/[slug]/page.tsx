@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { ArticleBody } from "@/components/article-body";
+import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
+import { ArticleBody, getArticleToc } from "@/components/article-body";
+import { ReadingProgress } from "@/components/reading-progress";
 import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import type { LocalizedPostWithNeighbors } from "@/lib/blog";
@@ -226,9 +227,12 @@ export default async function PostPage({
     variant: "hero",
   });
   const jsonLd = buildPostJsonLd({ locale, post });
+  const toc = getArticleToc(post.content);
+  const tocTitle = locale === "zh" ? "目录" : "Contents";
 
   return (
     <main className="bg-[rgb(249,251,250)]">
+      <ReadingProgress />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -336,6 +340,7 @@ export default async function PostPage({
 
             <div
               className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-10 shadow-sm sm:px-7 lg:px-10"
+              data-article-body
               {...buildSectionViewAttrs(`article-body-${slug}`)}
             >
               <ArticleBody content={post.content} />
@@ -455,6 +460,28 @@ export default async function PostPage({
           </article>
 
           <aside className="lg:sticky lg:top-24">
+            {toc.length > 0 ? (
+              <nav className="mb-5 rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                  <ListTree className="h-4 w-4" />
+                  {tocTitle}
+                </div>
+                <ol className="mt-4 space-y-2 text-sm">
+                  {toc.map((item) => (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        className={`block rounded-md px-2 py-1.5 leading-5 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 ${
+                          item.level === 3 ? "ml-4 text-xs" : "font-medium"
+                        }`}
+                      >
+                        {item.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            ) : null}
             <div className="rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
                 Sponsored

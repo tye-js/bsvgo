@@ -15,6 +15,7 @@ import {
 import {
   categories as categoryTable,
   categoryTranslations,
+  analyticsEvents,
   postPlacements,
   postTags,
   posts as postTable,
@@ -115,6 +116,11 @@ type PlacementQueryOptions = {
   slot: "featured" | "promoted";
   categorySlug?: string;
   limit?: number;
+};
+
+type TrendingPostRow = {
+  slug: string;
+  views: number;
 };
 
 function normalizeCoverImage(
@@ -542,6 +548,28 @@ async function queryTagBySlug(locale: Locale, slug: string) {
     .limit(1);
 }
 
+async function queryTrendingPostViews(locale: Locale, slugs: string[]) {
+  if (slugs.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const { readonlyDb } = await import("@/db");
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const rows = await readonlyDb.execute(sql<TrendingPostRow>`
+    select
+      ${analyticsEvents.articleSlug} as slug,
+      count(*)::int as views
+    from ${analyticsEvents}
+    where ${analyticsEvents.eventName} = 'article_view'
+      and ${analyticsEvents.locale} = ${locale}
+      and ${analyticsEvents.createdAt} >= ${since}
+      and ${analyticsEvents.articleSlug} = any(${slugs})
+    group by ${analyticsEvents.articleSlug}
+  `);
+
+  return new Map(rows.map((row) => [row.slug, Number(row.views) || 0]));
+}
+
 export const getLocalizedCategories = cache(
   async (locale: Locale): Promise<LocalizedCategory[]> => {
     try {
@@ -820,23 +848,71 @@ export const getRelatedPosts = cache(
     }
 
     try {
-      const candidates = mapPostRows(
-        await queryPosts(locale, {
-          excludeSlug: slug,
-          categorySlug: current.categorySlug,
-          limit: Math.max(limit * 3, limit),
-        })
-      );
+      const [categoryCandidates, recentCandidates, promotedCandidates] =
+        await Promise.all([
+          queryPosts(locale, {
+            excludeSlug: slug,
+            categorySlug: current.categorySlug,
+            limit: Math.max(limit * 4, 12),
+          }),
+          queryPosts(locale, {
+            excludeSlug: slug,
+            limit: Math.max(limit * 4, 12),
+          }),
+          queryPlacedPosts(locale, {
+            scope: "category",
+            slot: "promoted",
+            categorySlug: current.categorySlug,
+            limit: Math.max(limit * 2, 6),
+          }).catch(() => []),
+        ]);
+      const candidatesBySlug = new Map<string, LocalizedPost>();
+
+      for (const post of mapPostRows([
+        ...promotedCandidates,
+        ...categoryCandidates,
+        ...recentCandidates,
+      ])) {
+        if (post.slug !== slug) {
+          candidatesBySlug.set(post.slug, post);
+        }
+      }
+
+      const candidates = [...candidatesBySlug.values()];
+      const trendingViews = await queryTrendingPostViews(
+        locale,
+        candidates.map((post) => post.slug)
+      ).catch((error) => {
+        logDatabaseFallback(`related-trending:${locale}:${slug}`, error);
+        return new Map<string, number>();
+      });
       const tagSlugs = new Set(current.tags.map((tag) => tag.slug));
+      const promotedSlugs = new Set(
+        mapPostRows(promotedCandidates).map((post) => post.slug)
+      );
+      const now = Date.now();
       const scored = candidates
         .map((post) => {
           const sharedTags = post.tags.filter((tag) => tagSlugs.has(tag.slug)).length;
           const sharedCategory = post.categorySlug === current.categorySlug ? 1 : 0;
           const featuredBoost = post.featured ? 1 : 0;
+          const promotedBoost = promotedSlugs.has(post.slug) ? 2 : 0;
+          const viewBoost = Math.min(4, Math.log1p(trendingViews.get(post.slug) ?? 0));
+          const ageDays = Math.max(
+            0,
+            (now - new Date(post.publishedAt).getTime()) / (24 * 60 * 60 * 1000)
+          );
+          const freshnessBoost = Math.max(0, 2 - ageDays / 30);
 
           return {
             post,
-            score: sharedTags * 3 + sharedCategory * 2 + featuredBoost,
+            score:
+              sharedTags * 3 +
+              sharedCategory * 2 +
+              featuredBoost +
+              promotedBoost +
+              viewBoost +
+              freshnessBoost,
           };
         })
         .filter((entry) => entry.score > 0)

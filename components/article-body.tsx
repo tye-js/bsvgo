@@ -4,6 +4,12 @@ import { SafeImage } from "@/components/safe-image";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { siteConfig } from "@/lib/i18n";
 
+export type ArticleTocItem = {
+  id: string;
+  level: 2 | 3;
+  title: string;
+};
+
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
     return String(node);
@@ -18,6 +24,56 @@ function flattenText(node: ReactNode): string {
   }
 
   return "";
+}
+
+function slugifyHeading(value: string) {
+  const slug = value
+    .toLowerCase()
+    .trim()
+    .normalize("NFKD")
+    .replace(/['’]/g, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/(^-|-$)/g, "");
+
+  return slug || "section";
+}
+
+function createHeadingId(title: string, counts: Map<string, number>) {
+  const base = slugifyHeading(title);
+  const count = counts.get(base) ?? 0;
+  counts.set(base, count + 1);
+
+  return count === 0 ? base : `${base}-${count + 1}`;
+}
+
+export function getArticleToc(content: string): ArticleTocItem[] {
+  const counts = new Map<string, number>();
+
+  return content
+    .split("\n")
+    .map((line) => {
+      const match = /^(#{2,3})\s+(.+?)\s*#*$/.exec(line.trim());
+
+      if (!match) {
+        return null;
+      }
+
+      const title = match[2]
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[`*_~]/g, "")
+        .trim();
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        id: createHeadingId(title, counts),
+        level: match[1].length as 2 | 3,
+        title,
+      };
+    })
+    .filter(Boolean) as ArticleTocItem[];
 }
 
 function getLanguageLabel(className?: string) {
@@ -70,7 +126,10 @@ function isExternalHref(href: string | undefined) {
   }
 }
 
-const markdownComponents: Components = {
+function createMarkdownComponents(): Components {
+  const headingCounts = new Map<string, number>();
+
+  return {
   h1: ({ children, ...props }) => (
     <h1
       className="mt-10 text-3xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-4xl"
@@ -79,22 +138,32 @@ const markdownComponents: Components = {
       {children}
     </h1>
   ),
-  h2: ({ children, ...props }) => (
-    <h2
-      className="mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
-      {...props}
-    >
-      {children}
-    </h2>
-  ),
-  h3: ({ children, ...props }) => (
-    <h3
-      className="mt-10 text-xl font-semibold tracking-tight text-slate-950"
-      {...props}
-    >
-      {children}
-    </h3>
-  ),
+  h2: ({ children, ...props }) => {
+    const id = createHeadingId(flattenText(children), headingCounts);
+
+    return (
+      <h2
+        id={id}
+        className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
+        {...props}
+      >
+        {children}
+      </h2>
+    );
+  },
+  h3: ({ children, ...props }) => {
+    const id = createHeadingId(flattenText(children), headingCounts);
+
+    return (
+      <h3
+        id={id}
+        className="scroll-mt-28 mt-10 text-xl font-semibold tracking-tight text-slate-950"
+        {...props}
+      >
+        {children}
+      </h3>
+    );
+  },
   h4: ({ children, ...props }) => (
     <h4
       className="mt-8 text-lg font-semibold tracking-tight text-slate-950"
@@ -278,12 +347,13 @@ const markdownComponents: Components = {
       {children}
     </td>
   ),
-};
+  };
+}
 
 export function ArticleBody({ content }: { content: string }) {
   return (
     <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
-      <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+      <ReactMarkdown components={createMarkdownComponents()}>{content}</ReactMarkdown>
     </div>
   );
 }
