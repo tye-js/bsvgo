@@ -43,12 +43,19 @@ jobs:
           script_stop: true
           script: |
             set -e
+            export PATH="/usr/local/bin:$PATH"
+            if [ ! -d /home/${{ secrets.SERVER_USER }}/bsvgo/.git ]; then
+              git clone https://github.com/tye-js/bsvgo.git /home/${{ secrets.SERVER_USER }}/bsvgo
+            fi
             cd /home/${{ secrets.SERVER_USER }}/bsvgo
             git fetch origin main
             git reset --hard origin/main
             export DATABASE_URL="${{ secrets.DATABASE_URL }}"
             export DATABASE_READONLY_URL="${{ secrets.DATABASE_READONLY_URL }}"
             export NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}"
+            test -n "$DATABASE_URL"
+            test -n "$DATABASE_READONLY_URL"
+            test -n "$NEXT_PUBLIC_SITE_URL"
             rm -f .env .env.production
             printf "DATABASE_URL=%s\nDATABASE_READONLY_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\n" "$DATABASE_URL" "$DATABASE_READONLY_URL" "$NEXT_PUBLIC_SITE_URL" > .env.production.local
             npm ci

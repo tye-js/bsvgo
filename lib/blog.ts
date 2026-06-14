@@ -455,7 +455,7 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
 
 async function queryPlacedPosts(locale: Locale, options: PlacementQueryOptions) {
   const { readonlyDb } = await import("@/db");
-  const now = new Date();
+  const now = new Date().toISOString();
   const conditions = [
     ...publishedPostConditions(locale),
     eq(postPlacements.scope, options.scope),
