@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -21,15 +22,24 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const categoryTranslations = pgTable("category_translations", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  categoryId: uuid("category_id")
-    .notNull()
-    .references(() => categories.id, { onDelete: "cascade" }),
-  locale: varchar("locale", { length: 8 }).notNull(),
-  name: varchar("name", { length: 120 }).notNull(),
-  description: text("description").notNull(),
-});
+export const categoryTranslations = pgTable(
+  "category_translations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    locale: varchar("locale", { length: 8 }).notNull(),
+    name: varchar("name", { length: 120 }).notNull(),
+    description: text("description").notNull(),
+  },
+  (table) => [
+    uniqueIndex("category_translations_category_locale_unique").on(
+      table.categoryId,
+      table.locale
+    ),
+  ]
+);
 
 export const posts = pgTable("posts", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -137,19 +147,28 @@ export const analyticsEvents = pgTable(
   ]
 );
 
-export const postTranslations = pgTable("post_translations", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  postId: uuid("post_id")
-    .notNull()
-    .references(() => posts.id, { onDelete: "cascade" }),
-  locale: varchar("locale", { length: 8 }).notNull(),
-  title: varchar("title", { length: 220 }).notNull(),
-  excerpt: text("excerpt").notNull(),
-  content: text("content").notNull(),
-  readingMinutes: integer("reading_minutes").notNull(),
-  seoTitle: varchar("seo_title", { length: 220 }).notNull(),
-  seoDescription: varchar("seo_description", { length: 320 }).notNull(),
-});
+export const postTranslations = pgTable(
+  "post_translations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    locale: varchar("locale", { length: 8 }).notNull(),
+    title: varchar("title", { length: 220 }).notNull(),
+    excerpt: text("excerpt").notNull(),
+    content: text("content").notNull(),
+    readingMinutes: integer("reading_minutes").notNull(),
+    seoTitle: varchar("seo_title", { length: 220 }).notNull(),
+    seoDescription: varchar("seo_description", { length: 320 }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("post_translations_post_locale_unique").on(
+      table.postId,
+      table.locale
+    ),
+  ]
+);
 
 export const categoryRelations = relations(categories, ({ many }) => ({
   translations: many(categoryTranslations),

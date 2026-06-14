@@ -5,7 +5,7 @@ import { ArrowRight, Mail } from "lucide-react";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,

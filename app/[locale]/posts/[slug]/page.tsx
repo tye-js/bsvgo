@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/format";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const renderableAvatarHosts = new Set(["cms.bsvgo.com", "images.unsplash.com"]);
 
