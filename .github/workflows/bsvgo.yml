@@ -25,9 +25,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_READONLY_URL: ${{ secrets.DATABASE_READONLY_URL }}
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          DATABASE_READONLY_URL: ${{ secrets.DATABASE_READONLY_URL || vars.DATABASE_READONLY_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || vars.NEXT_PUBLIC_SITE_URL }}
 
   deploy:
     needs: build
@@ -35,27 +35,40 @@ jobs:
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER || vars.SERVER_USER }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
+          DATABASE_READONLY_URL: ${{ secrets.DATABASE_READONLY_URL || vars.DATABASE_READONLY_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || vars.NEXT_PUBLIC_SITE_URL }}
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
+          host: ${{ secrets.SERVER_IP || vars.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER || vars.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          port: ${{ secrets.SERVER_PORT || vars.SERVER_PORT || 22 }}
+          envs: SERVER_USER,DATABASE_URL,DATABASE_READONLY_URL,NEXT_PUBLIC_SITE_URL
           script_stop: true
           script: |
             set -e
             export PATH="/usr/local/bin:$PATH"
-            if [ ! -d /home/${{ secrets.SERVER_USER }}/bsvgo/.git ]; then
-              git clone https://github.com/tye-js/bsvgo.git /home/${{ secrets.SERVER_USER }}/bsvgo
+            require_env() {
+              name="$1"
+              eval "value=\${$name:-}"
+              if [ -z "$value" ]; then
+                echo "Missing required deploy setting: $name. Configure it in GitHub Actions secrets, or repository variables only for non-sensitive values."
+                exit 1
+              fi
+            }
+            require_env SERVER_USER
+            require_env DATABASE_URL
+            require_env DATABASE_READONLY_URL
+            require_env NEXT_PUBLIC_SITE_URL
+            PROJECT_DIR="/home/${SERVER_USER}/bsvgo"
+            if [ ! -d "$PROJECT_DIR/.git" ]; then
+              git clone https://github.com/tye-js/bsvgo.git "$PROJECT_DIR"
             fi
-            cd /home/${{ secrets.SERVER_USER }}/bsvgo
+            cd "$PROJECT_DIR"
             git fetch origin main
             git reset --hard origin/main
-            export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-            export DATABASE_READONLY_URL="${{ secrets.DATABASE_READONLY_URL }}"
-            export NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}"
-            test -n "$DATABASE_URL"
-            test -n "$DATABASE_READONLY_URL"
-            test -n "$NEXT_PUBLIC_SITE_URL"
             rm -f .env .env.production
             printf "DATABASE_URL=%s\nDATABASE_READONLY_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\n" "$DATABASE_URL" "$DATABASE_READONLY_URL" "$NEXT_PUBLIC_SITE_URL" > .env.production.local
             npm ci
