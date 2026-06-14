@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
-import { ArticleBody, getArticleToc } from "@/components/article-body";
+import {
+  ArticleBody,
+  getArticleToc,
+  type ArticleTocItem,
+} from "@/components/article-body";
 import { ReadingProgress } from "@/components/reading-progress";
 import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
@@ -16,6 +20,41 @@ import { promotedArticles } from "@/lib/promotions";
 export const revalidate = 300;
 
 const renderableAvatarHosts = new Set(["cms.bsvgo.com", "images.unsplash.com"]);
+
+function ArticleTocNav({
+  items,
+  title,
+}: {
+  items: ArticleTocItem[];
+  title: string;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav className="rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+        <ListTree className="h-4 w-4" />
+        {title}
+      </div>
+      <ol className="mt-4 space-y-2 text-sm">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              className={`block rounded-md px-2 py-1.5 leading-5 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 ${
+                item.level === 3 ? "ml-4 text-xs" : "font-medium"
+              }`}
+            >
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
 
 function absoluteUrl(path: string) {
   return new URL(path, siteConfig.url).toString();
@@ -237,8 +276,12 @@ export default async function PostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mx-auto max-w-7xl px-5 py-6 lg:py-10">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      <div className="mx-auto max-w-[88rem] px-5 py-6 lg:py-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)_300px]">
+          <aside className="hidden xl:sticky xl:top-24 xl:block">
+            <ArticleTocNav items={toc} title={tocTitle} />
+          </aside>
+
           <article
             className="min-w-0"
             {...buildSectionViewAttrs(`article-${slug}`)}
@@ -460,28 +503,6 @@ export default async function PostPage({
           </article>
 
           <aside className="lg:sticky lg:top-24">
-            {toc.length > 0 ? (
-              <nav className="mb-5 rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
-                  <ListTree className="h-4 w-4" />
-                  {tocTitle}
-                </div>
-                <ol className="mt-4 space-y-2 text-sm">
-                  {toc.map((item) => (
-                    <li key={item.id}>
-                      <a
-                        href={`#${item.id}`}
-                        className={`block rounded-md px-2 py-1.5 leading-5 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 ${
-                          item.level === 3 ? "ml-4 text-xs" : "font-medium"
-                        }`}
-                      >
-                        {item.title}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </nav>
-            ) : null}
             <div className="rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
                 Sponsored
