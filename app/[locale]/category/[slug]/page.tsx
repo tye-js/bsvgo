@@ -175,7 +175,7 @@ export default async function CategoryPage({
     ? createCoverArtDataUri({
         title: featured.title,
         label: featured.categoryName,
-        subtitle: featured.excerpt,
+        subtitle: featured.coverImageSeoDescription,
         categorySlug: featured.categorySlug,
         variant: "hero",
       })
@@ -281,12 +281,12 @@ export default async function CategoryPage({
                   src={getRenderableImageSrc(featured.coverImage, {
                     title: featured.title,
                     label: featured.categoryName,
-                    subtitle: featured.excerpt,
+                    subtitle: featured.coverImageSeoDescription,
                     categorySlug: featured.categorySlug,
                     variant: "hero",
                   })}
                   fallbackSrc={featuredImageFallback}
-                  alt=""
+                  alt={featured.coverImageAlt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 700px"
                   className="object-cover opacity-88 transition duration-500 group-hover:scale-[1.03]"

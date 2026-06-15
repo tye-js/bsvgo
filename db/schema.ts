@@ -51,6 +51,7 @@ export const posts = pgTable("posts", {
   pinned: boolean("pinned").notNull().default(false),
   mark: varchar("mark", { length: 20 }).notNull().default(""),
   coverImage: text("cover_image").notNull(),
+  coverImageId: uuid("cover_image_id"),
   aiAuthorRole: varchar("ai_author_role", { length: 80 }),
   aiAuthorZhName: varchar("ai_author_zh_name", { length: 120 }),
   aiAuthorEnName: varchar("ai_author_en_name", { length: 120 }),
@@ -66,6 +67,39 @@ export const tags = pgTable("tags", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: varchar("slug", { length: 80 }).notNull().unique(),
   name: varchar("name", { length: 120 }).notNull(),
+});
+
+export const mediaAssets = pgTable("media_assets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  url: text("url").notNull(),
+  altText: varchar("alt_text", { length: 255 }).notNull().default(""),
+  caption: text("caption").notNull().default(""),
+  storageProvider: varchar("storage_provider", { length: 50 })
+    .notNull()
+    .default("external"),
+  mimeType: varchar("mime_type", { length: 120 }),
+  width: integer("width"),
+  height: integer("height"),
+  fileSize: integer("file_size"),
+  createdBy: uuid("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+  storageKey: text("storage_key"),
+  originalFilename: varchar("original_filename", { length: 255 }),
+  checksum: varchar("checksum", { length: 128 }),
+  variants: jsonb("variants").notNull().default(sql`'{}'::jsonb`),
+  metadata: jsonb("metadata").notNull().default(sql`'{}'::jsonb`),
+  zhAltText: varchar("zh_alt_text", { length: 255 }).notNull().default(""),
+  enAltText: varchar("en_alt_text", { length: 255 }).notNull().default(""),
+  zhSeoTitle: varchar("zh_seo_title", { length: 220 }).notNull().default(""),
+  zhSeoDescription: varchar("zh_seo_description", { length: 320 })
+    .notNull()
+    .default(""),
+  enSeoTitle: varchar("en_seo_title", { length: 220 }).notNull().default(""),
+  enSeoDescription: varchar("en_seo_description", { length: 320 })
+    .notNull()
+    .default(""),
 });
 
 export const postTags = pgTable(
@@ -161,6 +195,7 @@ export const postTranslations = pgTable(
     readingMinutes: integer("reading_minutes").notNull(),
     seoTitle: varchar("seo_title", { length: 220 }).notNull(),
     seoDescription: varchar("seo_description", { length: 320 }).notNull(),
+    ogImage: text("og_image").notNull().default(""),
   },
   (table) => [
     uniqueIndex("post_translations_post_locale_unique").on(
@@ -180,6 +215,10 @@ export const postRelations = relations(posts, ({ one, many }) => ({
   category: one(categories, {
     fields: [posts.categoryId],
     references: [categories.id],
+  }),
+  coverImageAsset: one(mediaAssets, {
+    fields: [posts.coverImageId],
+    references: [mediaAssets.id],
   }),
   translations: many(postTranslations),
   tags: many(postTags),
@@ -214,6 +253,7 @@ export const postPlacementRelations = relations(postPlacements, ({ one }) => ({
 
 export type Category = typeof categories.$inferSelect;
 export type CategoryTranslation = typeof categoryTranslations.$inferSelect;
+export type MediaAsset = typeof mediaAssets.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type PostTranslation = typeof postTranslations.$inferSelect;
 export type Tag = typeof tags.$inferSelect;

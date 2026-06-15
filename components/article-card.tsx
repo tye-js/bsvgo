@@ -23,6 +23,8 @@ type ArticleCardPost = Pick<
   | "title"
   | "excerpt"
   | "coverImage"
+  | "coverImageAlt"
+  | "coverImageSeoDescription"
   | "publishedAt"
   | "categorySlug"
   | "categoryName"
@@ -34,6 +36,8 @@ type ShowcasePost = {
   title: string;
   excerpt: string;
   coverImage: string;
+  coverImageAlt?: string;
+  coverImageSeoDescription?: string;
   publishedAt: string;
   categorySlug: string;
   categoryName: string;
@@ -70,6 +74,12 @@ function getCoverImage(post: ArticleCardItem) {
   return "coverImage" in post ? post.coverImage : "";
 }
 
+function getCoverImageAlt(post: ArticleCardItem) {
+  return "coverImageAlt" in post && post.coverImageAlt
+    ? post.coverImageAlt
+    : post.title;
+}
+
 export function ArticleCard({
   locale,
   post,
@@ -86,7 +96,10 @@ export function ArticleCard({
   const fallbackSrc = createCoverArtDataUri({
     title: post.title,
     label: post.categoryName,
-    subtitle: post.excerpt,
+    subtitle:
+      "coverImageSeoDescription" in post && post.coverImageSeoDescription
+        ? post.coverImageSeoDescription
+        : post.excerpt,
     categorySlug: getCategorySlug(post),
     variant: "card",
   });
@@ -114,12 +127,15 @@ export function ArticleCard({
         src={getRenderableImageSrc(getCoverImage(post), {
           title: post.title,
           label: post.categoryName,
-          subtitle: post.excerpt,
+          subtitle:
+            "coverImageSeoDescription" in post && post.coverImageSeoDescription
+              ? post.coverImageSeoDescription
+              : post.excerpt,
           categorySlug: getCategorySlug(post),
           variant: "card",
         })}
         fallbackSrc={fallbackSrc}
-        alt=""
+        alt={getCoverImageAlt(post)}
         fill
         sizes={imageSizes}
         className="object-cover transition duration-500 group-hover:scale-[1.03]"
@@ -254,6 +270,7 @@ export function toShowcaseArticleCardItem({
     title: article.title,
     excerpt: article.excerpt,
     coverImage: article.image,
+    coverImageAlt: article.title,
     publishedAt: article.publishedAt,
     categorySlug,
     categoryName,

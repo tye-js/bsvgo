@@ -97,10 +97,11 @@ export async function generateMetadata({
   }
 
   const url = absoluteUrl(`/${locale}/posts/${slug}`);
-  const image = getRenderableImageSrc(post.coverImage, {
+  const imageSource = post.ogImage || post.coverImage;
+  const image = getRenderableImageSrc(imageSource, {
     title: post.title,
     label: post.categoryName,
-    subtitle: post.excerpt,
+    subtitle: post.coverImageSeoDescription,
     categorySlug: post.categorySlug,
     variant: "hero",
   });
@@ -109,7 +110,7 @@ export async function generateMetadata({
     : createCoverArtDataUri({
         title: post.title,
         label: post.categoryName,
-        subtitle: post.excerpt,
+        subtitle: post.coverImageSeoDescription,
         categorySlug: post.categorySlug,
         variant: "hero",
       });
@@ -137,7 +138,7 @@ export async function generateMetadata({
       images: [
         {
           url: absoluteImage,
-          alt: post.title,
+          alt: post.coverImageAlt,
         },
       ],
     },
@@ -160,10 +161,11 @@ function buildPostJsonLd({
   const postPath = `/${locale}/posts/${post.slug}`;
   const postUrl = absoluteUrl(postPath);
   const categoryUrl = absoluteUrl(`/${locale}/category/${post.categorySlug}`);
-  const image = getRenderableImageSrc(post.coverImage, {
+  const imageSource = post.ogImage || post.coverImage;
+  const image = getRenderableImageSrc(imageSource, {
     title: post.title,
     label: post.categoryName,
-    subtitle: post.excerpt,
+    subtitle: post.coverImageSeoDescription,
     categorySlug: post.categorySlug,
     variant: "hero",
   });
@@ -172,7 +174,7 @@ function buildPostJsonLd({
     : createCoverArtDataUri({
         title: post.title,
         label: post.categoryName,
-        subtitle: post.excerpt,
+        subtitle: post.coverImageSeoDescription,
         categorySlug: post.categorySlug,
         variant: "hero",
       });
@@ -190,6 +192,7 @@ function buildPostJsonLd({
     headline: post.title,
     description: post.seoDescription || post.excerpt,
     image: [imageUrl],
+    thumbnailUrl: imageUrl,
     datePublished: post.publishedAt,
     dateModified: post.updatedAt,
     inLanguage: locale,
@@ -261,7 +264,7 @@ export default async function PostPage({
   const heroImageFallback = createCoverArtDataUri({
     title: post.title,
     label: post.categoryName,
-    subtitle: post.excerpt,
+    subtitle: post.coverImageSeoDescription,
     categorySlug: post.categorySlug,
     variant: "hero",
   });
@@ -292,12 +295,12 @@ export default async function PostPage({
                   src={getRenderableImageSrc(post.coverImage, {
                     title: post.title,
                     label: post.categoryName,
-                    subtitle: post.excerpt,
+                    subtitle: post.coverImageSeoDescription,
                     categorySlug: post.categorySlug,
                     variant: "hero",
                   })}
                   fallbackSrc={heroImageFallback}
-                  alt=""
+                  alt={post.coverImageAlt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 900px"
                   className="object-cover object-center"
@@ -474,7 +477,7 @@ export default async function PostPage({
                             categorySlug: related.categorySlug,
                             variant: "card",
                           })}
-                          alt=""
+                          alt={related.coverImageAlt}
                           fill
                           sizes="(max-width: 768px) 100vw, 360px"
                           className="object-cover transition duration-500 group-hover:scale-[1.03]"

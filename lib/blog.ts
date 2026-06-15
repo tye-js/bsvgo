@@ -16,6 +16,7 @@ import {
   categories as categoryTable,
   categoryTranslations,
   analyticsEvents,
+  mediaAssets,
   postPlacements,
   postTags,
   posts as postTable,
@@ -60,6 +61,10 @@ export type LocalizedPost = {
   readingMinutes: number;
   seoTitle: string;
   seoDescription: string;
+  coverImageAlt: string;
+  coverImageSeoTitle: string;
+  coverImageSeoDescription: string;
+  ogImage: string;
   tags: LocalizedTagReference[];
 };
 
@@ -82,9 +87,20 @@ const fallbackCoverImages: Record<string, string> = {
 
 type RawPostRow = Omit<
   LocalizedPost,
-  "publishedAt" | "updatedAt" | "tags" | "coverImage"
+  | "publishedAt"
+  | "updatedAt"
+  | "tags"
+  | "coverImage"
+  | "coverImageAlt"
+  | "coverImageSeoTitle"
+  | "coverImageSeoDescription"
+  | "ogImage"
 > & {
   coverImage: string | null;
+  coverImageAlt: string | null;
+  coverImageSeoTitle: string | null;
+  coverImageSeoDescription: string | null;
+  ogImage: string | null;
   publishedAt: Date | null;
   updatedAt: Date | null;
   tags: unknown;
@@ -134,6 +150,11 @@ function normalizeCoverImage(
   }
 
   return fallbackCoverImages[categorySlug] ?? fallbackCoverImages.infrastructure;
+}
+
+function normalizeText(value: string | null | undefined, fallback: string) {
+  const text = value?.trim();
+  return text || fallback;
 }
 
 function normalizeTags(value: unknown): LocalizedTagReference[] {
@@ -202,6 +223,7 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
   return fallbackPostContent
     .map((post) => {
       const category = getCategoryBySlug(post.categorySlug);
+      const translation = post.translations[locale];
 
       if (!category) {
         return null;
@@ -221,7 +243,11 @@ export function getFallbackPosts(locale: Locale): LocalizedPost[] {
         categorySlug: post.categorySlug,
         categoryName: category.translations[locale].name,
         tags: post.tags.map(tagToReference),
-        ...post.translations[locale],
+        ...translation,
+        coverImageAlt: translation.title,
+        coverImageSeoTitle: translation.title,
+        coverImageSeoDescription: translation.excerpt,
+        ogImage: "",
       };
     })
     .filter(Boolean) as LocalizedPost[];
@@ -247,6 +273,13 @@ function mapPostRow(row: RawPostRow): LocalizedPost {
   return {
     ...row,
     coverImage: normalizeCoverImage(row.coverImage, row.categorySlug),
+    coverImageAlt: normalizeText(row.coverImageAlt, row.title),
+    coverImageSeoTitle: normalizeText(row.coverImageSeoTitle, row.title),
+    coverImageSeoDescription: normalizeText(
+      row.coverImageSeoDescription,
+      row.excerpt
+    ),
+    ogImage: row.ogImage?.trim() ?? "",
     publishedAt: row.publishedAt?.toISOString() ?? new Date().toISOString(),
     updatedAt:
       row.updatedAt?.toISOString() ??
@@ -295,6 +328,15 @@ function postSelectFields(locale: Locale) {
     readingMinutes: postTranslations.readingMinutes,
     seoTitle: postTranslations.seoTitle,
     seoDescription: postTranslations.seoDescription,
+    coverImageAlt:
+      locale === "zh" ? mediaAssets.zhAltText : mediaAssets.enAltText,
+    coverImageSeoTitle:
+      locale === "zh" ? mediaAssets.zhSeoTitle : mediaAssets.enSeoTitle,
+    coverImageSeoDescription:
+      locale === "zh"
+        ? mediaAssets.zhSeoDescription
+        : mediaAssets.enSeoDescription,
+    ogImage: postTranslations.ogImage,
   };
 }
 
@@ -320,6 +362,13 @@ function postGroupByColumns() {
     postTranslations.readingMinutes,
     postTranslations.seoTitle,
     postTranslations.seoDescription,
+    postTranslations.ogImage,
+    mediaAssets.zhAltText,
+    mediaAssets.enAltText,
+    mediaAssets.zhSeoTitle,
+    mediaAssets.enSeoTitle,
+    mediaAssets.zhSeoDescription,
+    mediaAssets.enSeoDescription,
   ] as const;
 }
 
@@ -441,6 +490,7 @@ async function queryPosts(locale: Locale, options: PostQueryOptions = {}) {
       )
     )
     .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
+    .leftJoin(mediaAssets, eq(mediaAssets.id, postTable.coverImageId))
     .leftJoin(postTags, eq(postTags.postId, postTable.id))
     .leftJoin(tagTable, eq(tagTable.id, postTags.tagId))
     .where(and(...conditions))
@@ -494,6 +544,7 @@ async function queryPlacedPosts(locale: Locale, options: PlacementQueryOptions) 
       )
     )
     .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
+    .leftJoin(mediaAssets, eq(mediaAssets.id, postTable.coverImageId))
     .leftJoin(postTags, eq(postTags.postId, postTable.id))
     .leftJoin(tagTable, eq(tagTable.id, postTags.tagId))
     .where(and(...conditions))

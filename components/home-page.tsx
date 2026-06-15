@@ -73,7 +73,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
     ? createCoverArtDataUri({
         title: featured.title,
         label: featured.categoryName,
-        subtitle: featured.excerpt,
+        subtitle: featured.coverImageSeoDescription,
         categorySlug: featured.categorySlug,
         variant: "hero",
       })
@@ -146,12 +146,12 @@ export async function HomePage({ locale }: { locale: Locale }) {
                     src={getRenderableImageSrc(featured.coverImage, {
                       title: featured.title,
                       label: featured.categoryName,
-                      subtitle: featured.excerpt,
+                      subtitle: featured.coverImageSeoDescription,
                       categorySlug: featured.categorySlug,
                       variant: "hero",
                     })}
                     fallbackSrc={featuredImageFallback}
-                    alt=""
+                    alt={featured.coverImageAlt}
                     fill
                     sizes="(max-width: 1024px) 100vw, 700px"
                     priority
