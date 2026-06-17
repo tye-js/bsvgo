@@ -11,6 +11,13 @@ export type ArticleTocItem = {
   title: string;
 };
 
+type ArticleLeadImage = {
+  src: string;
+  fallbackSrc: string;
+  alt: string;
+  caption?: string;
+};
+
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
     return String(node);
@@ -127,8 +134,32 @@ function isExternalHref(href: string | undefined) {
   }
 }
 
-function createMarkdownComponents(): Components {
+function ArticleLeadFigure({ image }: { image: ArticleLeadImage }) {
+  return (
+    <figure className="my-10 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="relative aspect-[16/9] bg-emerald-50">
+        <SafeImage
+          src={image.src}
+          fallbackSrc={image.fallbackSrc}
+          alt={image.alt}
+          fill
+          sizes="(max-width: 768px) 100vw, 760px"
+          className="object-cover"
+        />
+      </div>
+      {image.caption ? (
+        <figcaption className="px-4 py-3 text-sm leading-6 text-slate-500">
+          {image.caption}
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
+function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
   const headingCounts = new Map<string, number>();
+  let h2Count = 0;
+  let leadImageInserted = false;
 
   return {
   h1: ({ children, ...props }) => (
@@ -141,15 +172,25 @@ function createMarkdownComponents(): Components {
   ),
   h2: ({ children, ...props }) => {
     const id = createHeadingId(flattenText(children), headingCounts);
+    h2Count += 1;
+    const shouldInsertLeadImage =
+      leadImage && !leadImageInserted && h2Count === 2;
+
+    if (shouldInsertLeadImage) {
+      leadImageInserted = true;
+    }
 
     return (
-      <h2
-        id={id}
-        className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
-        {...props}
-      >
-        {children}
-      </h2>
+      <>
+        {shouldInsertLeadImage ? <ArticleLeadFigure image={leadImage} /> : null}
+        <h2
+          id={id}
+          className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
+          {...props}
+        >
+          {children}
+        </h2>
+      </>
     );
   },
   h3: ({ children, ...props }) => {
@@ -351,11 +392,17 @@ function createMarkdownComponents(): Components {
   };
 }
 
-export function ArticleBody({ content }: { content: string }) {
+export function ArticleBody({
+  content,
+  leadImage,
+}: {
+  content: string;
+  leadImage?: ArticleLeadImage;
+}) {
   return (
     <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
       <ReactMarkdown
-        components={createMarkdownComponents()}
+        components={createMarkdownComponents(leadImage)}
         remarkPlugins={[remarkGfm]}
       >
         {content}

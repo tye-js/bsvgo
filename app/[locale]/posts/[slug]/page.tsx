@@ -290,32 +290,17 @@ export default async function PostPage({
             {...buildSectionViewAttrs(`article-${slug}`)}
           >
             <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
-              <div className="relative min-h-[420px] overflow-hidden bg-emerald-50 sm:min-h-[470px] lg:min-h-[520px]">
-                <SafeImage
-                  src={getRenderableImageSrc(post.coverImage, {
-                    title: post.title,
-                    label: post.categoryName,
-                    subtitle: post.coverImageSeoDescription,
-                    categorySlug: post.categorySlug,
-                    variant: "hero",
-                  })}
-                  fallbackSrc={heroImageFallback}
-                  alt={post.coverImageAlt}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 900px"
-                  className="object-cover object-center"
-                  priority
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(236,253,245,0.12)_0%,rgba(249,251,250,0.05)_38%,rgba(249,251,250,0.26)_64%,rgba(249,251,250,0.96)_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-7 sm:pb-7 lg:px-10 lg:pb-10">
-                  <div className="max-w-3xl rounded-lg border border-white/40 bg-white/65 p-5 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-6 lg:p-7">
-                    <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
-                      {post.title}
-                    </h1>
-                    <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-                      {post.excerpt}
-                    </p>
-                  </div>
+              <div className="bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(250,252,255,0.98))] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12">
+                <div className="max-w-3xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                    {post.categoryName}
+                  </p>
+                  <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-6xl">
+                    {post.title}
+                  </h1>
+                  <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                    {post.excerpt}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col gap-4 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
@@ -389,7 +374,21 @@ export default async function PostPage({
               data-article-body
               {...buildSectionViewAttrs(`article-body-${slug}`)}
             >
-              <ArticleBody content={post.content} />
+              <ArticleBody
+                content={post.content}
+                leadImage={{
+                  src: getRenderableImageSrc(post.coverImage, {
+                    title: post.title,
+                    label: post.categoryName,
+                    subtitle: post.coverImageSeoDescription,
+                    categorySlug: post.categorySlug,
+                    variant: "hero",
+                  }),
+                  fallbackSrc: heroImageFallback,
+                  alt: post.coverImageAlt,
+                  caption: post.coverImageSeoDescription,
+                }}
+              />
             </div>
 
             <nav className="mt-8 grid gap-4 md:grid-cols-2">
