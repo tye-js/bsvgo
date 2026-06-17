@@ -15,7 +15,6 @@ type ArticleLeadImage = {
   src: string;
   fallbackSrc: string;
   alt: string;
-  caption?: string;
 };
 
 function flattenText(node: ReactNode): string {
@@ -136,8 +135,8 @@ function isExternalHref(href: string | undefined) {
 
 function ArticleLeadFigure({ image }: { image: ArticleLeadImage }) {
   return (
-    <figure className="my-10 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="relative aspect-[16/9] bg-emerald-50">
+    <figure className="my-10">
+      <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-emerald-50 shadow-sm">
         <SafeImage
           src={image.src}
           fallbackSrc={image.fallbackSrc}
@@ -147,11 +146,6 @@ function ArticleLeadFigure({ image }: { image: ArticleLeadImage }) {
           className="object-cover"
         />
       </div>
-      {image.caption ? (
-        <figcaption className="px-4 py-3 text-sm leading-6 text-slate-500">
-          {image.caption}
-        </figcaption>
-      ) : null}
     </figure>
   );
 }
@@ -338,8 +332,8 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     });
 
     return (
-      <figure className="my-8 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="relative aspect-[16/9] bg-emerald-50">
+      <figure className="my-8">
+        <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-emerald-50 shadow-sm">
           <SafeImage
             src={getRenderableImageSrc(typeof src === "string" ? src : null, {
               title: alt ?? "BSVgo",
@@ -354,7 +348,7 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
           />
         </div>
         {alt ? (
-          <figcaption className="px-4 py-3 text-sm leading-6 text-slate-500">
+          <figcaption className="pt-3 text-sm leading-6 text-slate-500">
             {alt}
           </figcaption>
         ) : null}

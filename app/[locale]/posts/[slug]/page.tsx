@@ -386,7 +386,6 @@ export default async function PostPage({
                   }),
                   fallbackSrc: heroImageFallback,
                   alt: post.coverImageAlt,
-                  caption: post.coverImageSeoDescription,
                 }}
               />
             </div>
