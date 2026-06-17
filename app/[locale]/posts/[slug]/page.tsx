@@ -461,7 +461,7 @@ export default async function PostPage({
                       })}
                       className="group overflow-hidden rounded-lg border border-teal-900/10 bg-[rgb(249,251,250)] transition hover:border-emerald-300"
                     >
-                      <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                      <div className="relative aspect-[16/9] overflow-hidden bg-emerald-50">
                         <SafeImage
                           src={getRenderableImageSrc(related.coverImage, {
                             title: related.title,

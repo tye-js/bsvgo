@@ -141,7 +141,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 })}
                 className="group block"
               >
-                <div className="relative aspect-[16/10] overflow-hidden bg-emerald-50">
+                <div className="relative aspect-[16/9] overflow-hidden bg-emerald-50">
                   <SafeImage
                     src={getRenderableImageSrc(featured.coverImage, {
                       title: featured.title,

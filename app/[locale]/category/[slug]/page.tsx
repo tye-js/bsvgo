@@ -264,7 +264,7 @@ export default async function CategoryPage({
           </div>
 
           {featured ? (
-            <article className={`group relative min-h-[360px] overflow-hidden rounded-lg border ${style.border} bg-slate-950 shadow-sm lg:min-h-[430px]`}>
+            <article className={`group relative aspect-[16/9] overflow-hidden rounded-lg border ${style.border} bg-slate-950 shadow-sm`}>
               <Link
                 href={`/${locale}/posts/${featured.slug}`}
                 {...buildAnalyticsAttrs({
@@ -292,7 +292,7 @@ export default async function CategoryPage({
                   className="object-cover opacity-88 transition duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(2,6,23,0.86)_0%,rgba(2,6,23,0.48)_50%,rgba(2,6,23,0.08)_100%)]" />
-                <div className="relative flex min-h-[360px] flex-col justify-end p-5 text-white sm:p-6 lg:min-h-[430px]">
+                <div className="relative flex h-full flex-col justify-end p-5 text-white sm:p-6">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <span className={`rounded-md px-3 py-1.5 text-xs font-semibold ${style.accent}`}>
                       {pageCopy.featuredLabel}

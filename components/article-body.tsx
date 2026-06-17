@@ -1,5 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { SafeImage } from "@/components/safe-image";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { siteConfig } from "@/lib/i18n";
@@ -353,7 +354,12 @@ function createMarkdownComponents(): Components {
 export function ArticleBody({ content }: { content: string }) {
   return (
     <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
-      <ReactMarkdown components={createMarkdownComponents()}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        components={createMarkdownComponents()}
+        remarkPlugins={[remarkGfm]}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
