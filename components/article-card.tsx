@@ -6,6 +6,7 @@ import type { LocalizedPost, LocalizedTagReference } from "@/lib/blog";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import type { CategorySlug } from "@/lib/content";
 import { formatDate } from "@/lib/format";
+import { imageSizes as sharedImageSizes } from "@/lib/image-sizes";
 import type { Locale } from "@/lib/i18n";
 import { uiCopy } from "@/lib/i18n";
 
@@ -53,6 +54,7 @@ type ArticleCardProps = {
   section?: string;
   tone?: ArticleCardTone;
   imageSizes?: string;
+  imagePriority?: boolean;
   density?: "compact" | "regular";
   showMetaIcons?: boolean;
   showReadMoreIcon?: boolean;
@@ -85,7 +87,8 @@ export function ArticleCard({
   post,
   section,
   tone,
-  imageSizes = "(max-width: 1024px) 50vw, 320px",
+  imageSizes = sharedImageSizes.fiveColumnCard,
+  imagePriority = false,
   density = "compact",
   showMetaIcons = false,
   showReadMoreIcon = false,
@@ -138,6 +141,7 @@ export function ArticleCard({
         alt={getCoverImageAlt(post)}
         fill
         sizes={imageSizes}
+        priority={imagePriority}
         className="object-cover transition duration-500 group-hover:scale-[1.03]"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/34 via-transparent to-transparent" />

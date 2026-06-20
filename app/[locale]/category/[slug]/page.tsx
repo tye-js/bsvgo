@@ -21,6 +21,7 @@ import {
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { isCategorySlug } from "@/lib/content";
 import { formatDate } from "@/lib/format";
+import { imageSizes } from "@/lib/image-sizes";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
 export const revalidate = 300;
@@ -288,7 +289,8 @@ export default async function CategoryPage({
                   fallbackSrc={featuredImageFallback}
                   alt={featured.coverImageAlt}
                   fill
-                  sizes="(max-width: 1024px) 100vw, 700px"
+                  sizes={imageSizes.hero}
+                  priority
                   className="object-cover opacity-88 transition duration-500 group-hover:scale-[1.03]"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(2,6,23,0.86)_0%,rgba(2,6,23,0.48)_50%,rgba(2,6,23,0.08)_100%)]" />
@@ -352,6 +354,7 @@ export default async function CategoryPage({
                   locale={locale}
                   post={post}
                   section="category-promoted"
+                  imageSizes={imageSizes.fiveColumnCard}
                   tone={{
                     border: style.border,
                     accent: style.accent,
@@ -394,7 +397,7 @@ export default async function CategoryPage({
                   density="regular"
                   showMetaIcons
                   showReadMoreIcon
-                  imageSizes="(max-width: 1024px) 50vw, 360px"
+                  imageSizes={imageSizes.cardGrid}
                   tone={{
                     card: style.section,
                     border: style.border,

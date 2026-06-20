@@ -147,6 +147,74 @@ export const postPlacements = pgTable(
   ]
 );
 
+export const topicCollections = pgTable(
+  "topic_collections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 120 }).notNull().unique(),
+    status: varchar("status", { length: 32 }).notNull().default("draft"),
+    coverImageId: uuid("cover_image_id").references(() => mediaAssets.id, {
+      onDelete: "set null",
+    }),
+    sortOrder: integer("sort_order").notNull().default(1000),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    index("topic_collections_status_sort_idx").on(
+      table.status,
+      table.deletedAt,
+      table.sortOrder
+    ),
+  ]
+);
+
+export const topicCollectionTranslations = pgTable(
+  "topic_collection_translations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => topicCollections.id, { onDelete: "cascade" }),
+    locale: varchar("locale", { length: 8 }).notNull(),
+    title: varchar("title", { length: 220 }).notNull(),
+    description: text("description").notNull(),
+    seoTitle: varchar("seo_title", { length: 220 }).notNull(),
+    seoDescription: varchar("seo_description", { length: 320 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("topic_collection_translations_locale_unique").on(
+      table.collectionId,
+      table.locale
+    ),
+  ]
+);
+
+export const topicCollectionPosts = pgTable(
+  "topic_collection_posts",
+  {
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => topicCollections.id, { onDelete: "cascade" }),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(1000),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.collectionId, table.postId] }),
+    index("topic_collection_posts_collection_sort_idx").on(
+      table.collectionId,
+      table.sortOrder
+    ),
+    index("topic_collection_posts_post_idx").on(table.postId),
+  ]
+);
+
 export const analyticsEvents = pgTable(
   "analytics_events",
   {
@@ -223,6 +291,7 @@ export const postRelations = relations(posts, ({ one, many }) => ({
   translations: many(postTranslations),
   tags: many(postTags),
   placements: many(postPlacements),
+  collectionPosts: many(topicCollectionPosts),
 }));
 
 export const tagRelations = relations(tags, ({ many }) => ({
@@ -251,6 +320,42 @@ export const postPlacementRelations = relations(postPlacements, ({ one }) => ({
   }),
 }));
 
+export const topicCollectionRelations = relations(
+  topicCollections,
+  ({ one, many }) => ({
+    coverImageAsset: one(mediaAssets, {
+      fields: [topicCollections.coverImageId],
+      references: [mediaAssets.id],
+    }),
+    translations: many(topicCollectionTranslations),
+    posts: many(topicCollectionPosts),
+  })
+);
+
+export const topicCollectionTranslationRelations = relations(
+  topicCollectionTranslations,
+  ({ one }) => ({
+    collection: one(topicCollections, {
+      fields: [topicCollectionTranslations.collectionId],
+      references: [topicCollections.id],
+    }),
+  })
+);
+
+export const topicCollectionPostRelations = relations(
+  topicCollectionPosts,
+  ({ one }) => ({
+    collection: one(topicCollections, {
+      fields: [topicCollectionPosts.collectionId],
+      references: [topicCollections.id],
+    }),
+    post: one(posts, {
+      fields: [topicCollectionPosts.postId],
+      references: [posts.id],
+    }),
+  })
+);
+
 export type Category = typeof categories.$inferSelect;
 export type CategoryTranslation = typeof categoryTranslations.$inferSelect;
 export type MediaAsset = typeof mediaAssets.$inferSelect;
@@ -259,4 +364,8 @@ export type PostTranslation = typeof postTranslations.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type PostTag = typeof postTags.$inferSelect;
 export type PostPlacement = typeof postPlacements.$inferSelect;
+export type TopicCollection = typeof topicCollections.$inferSelect;
+export type TopicCollectionTranslation =
+  typeof topicCollectionTranslations.$inferSelect;
+export type TopicCollectionPost = typeof topicCollectionPosts.$inferSelect;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;

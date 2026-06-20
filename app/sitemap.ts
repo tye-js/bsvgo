@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import {
+  getLocalizedCollections,
   getLocalizedCategories,
   getLocalizedPosts,
   getLocalizedTags,
@@ -14,10 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   for (const locale of locales) {
-    const [categories, posts, tags] = await Promise.all([
+    const [categories, posts, tags, collections] = await Promise.all([
       getLocalizedCategories(locale),
       getLocalizedPosts(locale),
       getLocalizedTags(locale),
+      getLocalizedCollections(locale),
     ]);
 
     routes.push({
@@ -41,6 +43,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     });
 
+    routes.push({
+      url: `${base}/${locale}/collections`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    });
+
     for (const category of categories) {
       routes.push({
         url: `${base}/${locale}/category/${category.slug}`,
@@ -56,6 +65,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(post.updatedAt || post.publishedAt),
         changeFrequency: "weekly",
         priority: post.featured || post.pinned ? 0.9 : 0.7,
+      });
+    }
+
+    for (const collection of collections) {
+      routes.push({
+        url: `${base}/${locale}/collections/${collection.slug}`,
+        lastModified: new Date(collection.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.8,
       });
     }
 

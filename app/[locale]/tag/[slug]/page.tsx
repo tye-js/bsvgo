@@ -6,6 +6,7 @@ import {
   getLocalizedPostsByTagSlug,
   getLocalizedTagBySlug,
 } from "@/lib/blog";
+import { imageSizes } from "@/lib/image-sizes";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
 export const revalidate = 300;
@@ -84,9 +85,17 @@ export default async function TagPage({
         className="mx-auto max-w-7xl px-5 pb-16"
         {...buildSectionViewAttrs(`tag-articles-${slug}`)}
       >
-        {posts.map((post) => (
-          <ArticleCard key={post.slug} locale={locale} post={post} />
-        ))}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => (
+            <ArticleCard
+              key={post.slug}
+              locale={locale}
+              post={post}
+              section={`tag-${slug}`}
+              imageSizes={imageSizes.cardGrid}
+            />
+          ))}
+        </div>
       </section>
     </main>
   );

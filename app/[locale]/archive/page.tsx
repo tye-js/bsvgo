@@ -9,6 +9,7 @@ import {
   getLocalizedTags,
   searchLocalizedPosts,
 } from "@/lib/blog";
+import { imageSizes } from "@/lib/image-sizes";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 
 export const revalidate = 120;
@@ -218,7 +219,7 @@ export default async function ArchivePage({
                 density="regular"
                 showMetaIcons
                 showReadMoreIcon
-                imageSizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px"
+                imageSizes={imageSizes.cardGrid}
               />
             ))}
           </div>

@@ -4,15 +4,18 @@ import {
   ArrowRight,
   Brain,
   Blocks,
+  BookOpen,
   Flame,
   Newspaper,
   ServerCog,
 } from "lucide-react";
 import { ArticleCard } from "@/components/article-card";
+import { CollectionCard } from "@/components/collection-card";
 import { SectionHeader } from "@/components/section-header";
 import { SafeImage } from "@/components/safe-image";
 import {
   getFeaturedPost,
+  getLocalizedCollections,
   getLocalizedCategories,
   getLocalizedPosts,
   getSponsoredPosts,
@@ -20,6 +23,7 @@ import {
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { isCategorySlug } from "@/lib/content";
+import { imageSizes } from "@/lib/image-sizes";
 import type { Locale } from "@/lib/i18n";
 import { uiCopy } from "@/lib/i18n";
 
@@ -60,11 +64,12 @@ const defaultTopicStyle = topicStyles.infrastructure;
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = uiCopy[locale];
-  const [categories, posts, homeFeaturedPost, sponsoredPosts] = await Promise.all([
+  const [categories, posts, homeFeaturedPost, sponsoredPosts, collections] = await Promise.all([
     getLocalizedCategories(locale),
     getLocalizedPosts(locale),
     getFeaturedPost(locale),
     getSponsoredPosts(locale, 5),
+    getLocalizedCollections(locale, 3),
   ]);
 
   const featured = homeFeaturedPost ?? posts[0] ?? null;
@@ -153,7 +158,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                     fallbackSrc={featuredImageFallback}
                     alt={featured.coverImageAlt}
                     fill
-                    sizes="(max-width: 1024px) 100vw, 700px"
+                    sizes={imageSizes.hero}
                     priority
                     className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   />
@@ -207,7 +212,39 @@ export async function HomePage({ locale }: { locale: Locale }) {
               locale={locale}
               post={post}
               section="popular"
-              imageSizes="(max-width: 1024px) 50vw, 320px"
+              imageSizes={imageSizes.fiveColumnCard}
+            />
+          ))}
+        </ArticleSection>
+      ) : null}
+
+      {collections.length > 0 ? (
+        <ArticleSection
+          id="collections"
+          className="bg-[rgb(249,251,250)] py-16"
+          icon={BookOpen}
+          eyebrow={locale === "zh" ? "专题" : "collections"}
+          title={locale === "zh" ? "专题阅读" : "Reading collections"}
+          description={
+            locale === "zh"
+              ? "围绕一个主题连续阅读，按后台设定顺序组织文章。"
+              : "Follow a focused topic through an ordered set of articles."
+          }
+          actionHref={`/${locale}/collections`}
+          actionLabel={copy.viewAll}
+          actionAnalytics={{
+            eventName: "section_jump",
+            label: copy.viewAll,
+            href: `/${locale}/collections`,
+            section: "collections",
+            targetType: "collection",
+          }}
+        >
+          {collections.map((collection) => (
+            <CollectionCard
+              key={collection.slug}
+              locale={locale}
+              collection={collection}
             />
           ))}
         </ArticleSection>
@@ -235,7 +272,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
             locale={locale}
             post={post}
             section="latest"
-            imageSizes="(max-width: 1024px) 50vw, 360px"
+            imageSizes={imageSizes.fiveColumnCard}
           />
         ))}
       </ArticleSection>
@@ -298,6 +335,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 locale={locale}
                 post={post}
                 section={`topic-${category.slug}`}
+                imageSizes={imageSizes.fiveColumnCard}
                 tone={{
                   card: style.card,
                   border: "border-slate-200",

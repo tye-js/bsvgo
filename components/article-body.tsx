@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { SafeImage } from "@/components/safe-image";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import type { CategorySlug } from "@/lib/content";
+import { imageSizes } from "@/lib/image-sizes";
 import { siteConfig } from "@/lib/i18n";
 
 export type ArticleTocItem = {
@@ -225,7 +226,7 @@ function ArticleLeadFigure({
           fallbackSrc={image.fallbackSrc}
           alt={image.alt}
           fill
-          sizes="(max-width: 768px) 100vw, 760px"
+          sizes={imageSizes.articleBody}
           className="object-cover"
         />
       </div>
@@ -533,7 +534,7 @@ function createMarkdownComponents(
             fallbackSrc={fallbackSrc}
             alt={alt ?? ""}
             fill
-            sizes="(max-width: 768px) 100vw, 760px"
+            sizes={imageSizes.articleBody}
             className="object-cover"
           />
         </div>

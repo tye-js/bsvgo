@@ -1,61 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
-import {
-  ArticleBody,
-  getArticleToc,
-  type ArticleTocItem,
-} from "@/components/article-body";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArticleBody, getArticleToc } from "@/components/article-body";
 import { ArticleShareActions } from "@/components/article-share-actions";
+import { ArticleTocNav } from "@/components/article-toc-nav";
+import { PostCollectionPanel } from "@/components/collection-card";
 import { ReadingProgress } from "@/components/reading-progress";
 import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
 import type { LocalizedPostWithNeighbors } from "@/lib/blog";
-import { getPostData, getRelatedPosts } from "@/lib/blog";
+import { getPostCollections, getPostData, getRelatedPosts } from "@/lib/blog";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
 import { formatDate } from "@/lib/format";
+import { imageSizes } from "@/lib/image-sizes";
 import { Locale, locales, siteConfig, uiCopy } from "@/lib/i18n";
 import { promotedArticles } from "@/lib/promotions";
 
 export const revalidate = 300;
 
 const renderableAvatarHosts = new Set(["cms.bsvgo.com", "images.unsplash.com"]);
-
-function ArticleTocNav({
-  items,
-  title,
-}: {
-  items: ArticleTocItem[];
-  title: string;
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    <nav className="rounded-lg border border-teal-900/10 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
-        <ListTree className="h-4 w-4" />
-        {title}
-      </div>
-      <ol className="mt-4 space-y-2 text-sm">
-        {items.map((item) => (
-          <li key={item.id}>
-            <a
-              href={`#${item.id}`}
-              className={`block rounded-md px-2 py-1.5 leading-5 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700 ${
-                item.level === 3 ? "ml-4 text-xs" : "font-medium"
-              }`}
-            >
-              {item.title}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
 
 function absoluteUrl(path: string) {
   return new URL(path, siteConfig.url).toString();
@@ -273,7 +237,12 @@ export default async function PostPage({
   }
 
   const post = await getPostData(locale, slug);
-  const relatedPosts = post ? await getRelatedPosts(locale, slug) : [];
+  const [relatedPosts, postCollections] = post
+    ? await Promise.all([
+        getRelatedPosts(locale, slug),
+        getPostCollections(locale, slug),
+      ])
+    : [[], []];
   const copy = uiCopy[locale];
   const promotions = promotedArticles[locale];
 
@@ -319,7 +288,7 @@ export default async function PostPage({
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
                     {post.categoryName}
                   </p>
-                  <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-6xl">
+                  <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl md:text-5xl">
                     {post.title}
                   </h1>
                   <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
@@ -342,7 +311,7 @@ export default async function PostPage({
                             })}
                             alt={authorName ?? ""}
                             fill
-                            sizes="44px"
+                            sizes={imageSizes.avatar}
                             className="object-cover"
                           />
                         ) : (
@@ -424,6 +393,13 @@ export default async function PostPage({
                 }}
               />
             </div>
+
+            {postCollections.length > 0 ? (
+              <PostCollectionPanel
+                locale={locale}
+                collection={postCollections[0]}
+              />
+            ) : null}
 
             <nav className="mt-8 grid gap-4 md:grid-cols-2">
               {post.previous ? (
@@ -512,7 +488,7 @@ export default async function PostPage({
                           })}
                           alt={related.coverImageAlt}
                           fill
-                          sizes="(max-width: 768px) 100vw, 360px"
+                          sizes={imageSizes.relatedCard}
                           className="object-cover transition duration-500 group-hover:scale-[1.03]"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" />
@@ -574,7 +550,7 @@ export default async function PostPage({
                         })}
                         alt={item.title}
                         fill
-                        sizes="300px"
+                        sizes={imageSizes.sidebarCard}
                         className="object-cover transition duration-500 group-hover:scale-[1.03]"
                       />
                     </div>
