@@ -11,6 +11,7 @@ export const revalidate = 300;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteConfig.url;
   const routes: MetadataRoute.Sitemap = [];
+  const now = new Date();
 
   for (const locale of locales) {
     const [categories, posts, tags] = await Promise.all([
@@ -21,37 +22,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     routes.push({
       url: `${base}/${locale}`,
-      lastModified: new Date(),
+      lastModified: now,
+      changeFrequency: "hourly",
+      priority: locale === "en" ? 1 : 0.9,
     });
 
     routes.push({
       url: `${base}/${locale}/about`,
-      lastModified: new Date(),
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.5,
     });
 
     routes.push({
       url: `${base}/${locale}/archive`,
-      lastModified: new Date(),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
     });
 
     for (const category of categories) {
       routes.push({
         url: `${base}/${locale}/category/${category.slug}`,
-        lastModified: new Date(),
+        lastModified: now,
+        changeFrequency: "daily",
+        priority: 0.8,
       });
     }
 
     for (const post of posts) {
       routes.push({
         url: `${base}/${locale}/posts/${post.slug}`,
-        lastModified: new Date(post.publishedAt),
+        lastModified: new Date(post.updatedAt || post.publishedAt),
+        changeFrequency: "weekly",
+        priority: post.featured || post.pinned ? 0.9 : 0.7,
       });
     }
 
     for (const tag of tags) {
       routes.push({
         url: `${base}/${locale}/tag/${tag.slug}`,
-        lastModified: new Date(),
+        lastModified: now,
+        changeFrequency: "daily",
+        priority: 0.6,
       });
     }
   }

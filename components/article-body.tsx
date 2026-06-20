@@ -17,6 +17,8 @@ type ArticleLeadImage = {
   alt: string;
 };
 
+const leadImageMarker = "bsvgo-lead-image";
+
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
     return String(node);
@@ -150,10 +152,116 @@ function ArticleLeadFigure({ image }: { image: ArticleLeadImage }) {
   );
 }
 
+function normalizeCollapsedMarkdownTables(content: string) {
+  return content
+    .split("\n")
+    .map((line) => {
+      if (!/\|\s*:?-{3,}:?\s*\|/.test(line)) {
+        return line;
+      }
+
+      const cells = line
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter(Boolean);
+      const delimiterIndex = cells.findIndex((cell) =>
+        /^:?-{3,}:?$/.test(cell)
+      );
+
+      if (delimiterIndex < 1) {
+        return line;
+      }
+
+      let columnCount = 0;
+      for (let index = delimiterIndex; index < cells.length; index += 1) {
+        if (!/^:?-{3,}:?$/.test(cells[index])) {
+          break;
+        }
+
+        columnCount += 1;
+      }
+
+      if (columnCount < 2 || cells.length % columnCount !== 0) {
+        return line;
+      }
+
+      const rows: string[] = [];
+      for (let index = 0; index < cells.length; index += columnCount) {
+        rows.push(`| ${cells.slice(index, index + columnCount).join(" | ")} |`);
+      }
+
+      return rows.join("\n");
+    })
+    .join("\n");
+}
+
+function insertLeadImageMarker(content: string, leadImage?: ArticleLeadImage) {
+  if (!leadImage) {
+    return content;
+  }
+
+  const markerBlock = ["", `::${leadImageMarker}::`, ""];
+  const lines = content.split("\n");
+  const h2Indexes = lines
+    .map((line, index) => (/^##\s+\S/.test(line.trim()) ? index : -1))
+    .filter((index) => index >= 0);
+
+  if (h2Indexes.length >= 2) {
+    lines.splice(h2Indexes[1], 0, ...markerBlock);
+    return lines.join("\n");
+  }
+
+  if (h2Indexes.length === 1) {
+    lines.splice(h2Indexes[0] + 1, 0, ...markerBlock);
+    return lines.join("\n");
+  }
+
+  const paragraphIndexes: number[] = [];
+  let inFence = false;
+  let paragraphStart: number | null = null;
+
+  for (let index = 0; index <= lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    const trimmed = line.trim();
+
+    if (/^```/.test(trimmed)) {
+      inFence = !inFence;
+    }
+
+    const isParagraphBoundary =
+      index === lines.length ||
+      trimmed === "" ||
+      /^#{1,6}\s+/.test(trimmed) ||
+      /^[-*+]\s+/.test(trimmed) ||
+      /^\d+\.\s+/.test(trimmed) ||
+      /^>/.test(trimmed) ||
+      /^\|/.test(trimmed) ||
+      /^```/.test(trimmed);
+
+    if (!inFence && paragraphStart === null && !isParagraphBoundary) {
+      paragraphStart = index;
+    }
+
+    if (paragraphStart !== null && isParagraphBoundary) {
+      paragraphIndexes.push(index);
+      paragraphStart = null;
+    }
+  }
+
+  const insertIndex = paragraphIndexes[1] ?? paragraphIndexes[0] ?? 0;
+  lines.splice(insertIndex, 0, ...markerBlock);
+  return lines.join("\n");
+}
+
+function prepareArticleContent(content: string, leadImage?: ArticleLeadImage) {
+  return insertLeadImageMarker(
+    normalizeCollapsedMarkdownTables(content),
+    leadImage
+  );
+}
+
 function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
   const headingCounts = new Map<string, number>();
-  let h2Count = 0;
-  let leadImageInserted = false;
 
   return {
   h1: ({ children, ...props }) => (
@@ -166,25 +274,15 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
   ),
   h2: ({ children, ...props }) => {
     const id = createHeadingId(flattenText(children), headingCounts);
-    h2Count += 1;
-    const shouldInsertLeadImage =
-      leadImage && !leadImageInserted && h2Count === 2;
-
-    if (shouldInsertLeadImage) {
-      leadImageInserted = true;
-    }
 
     return (
-      <>
-        {shouldInsertLeadImage ? <ArticleLeadFigure image={leadImage} /> : null}
-        <h2
-          id={id}
-          className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
-          {...props}
-        >
-          {children}
-        </h2>
-      </>
+      <h2
+        id={id}
+        className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
+        {...props}
+      >
+        {children}
+      </h2>
     );
   },
   h3: ({ children, ...props }) => {
@@ -209,9 +307,13 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     </h4>
   ),
   p: ({ children, ...props }) => (
-    <p className="my-5 leading-8 text-slate-700" {...props}>
-      {children}
-    </p>
+    flattenText(children).trim() === `::${leadImageMarker}::` && leadImage ? (
+      <ArticleLeadFigure image={leadImage} />
+    ) : (
+      <p className="my-5 leading-8 text-slate-700" {...props}>
+        {children}
+      </p>
+    )
   ),
   a: ({ children, href, ...props }) => {
     const isExternal = isExternalHref(href);
@@ -393,13 +495,15 @@ export function ArticleBody({
   content: string;
   leadImage?: ArticleLeadImage;
 }) {
+  const preparedContent = prepareArticleContent(content, leadImage);
+
   return (
     <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
       <ReactMarkdown
         components={createMarkdownComponents(leadImage)}
         remarkPlugins={[remarkGfm]}
       >
-        {content}
+        {preparedContent}
       </ReactMarkdown>
     </div>
   );

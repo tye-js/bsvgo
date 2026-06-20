@@ -79,6 +79,13 @@ function getRenderableAvatarSrc(value: string | undefined) {
   }
 }
 
+function countWords(content: string) {
+  const latinWords = content.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*/g) ?? [];
+  const cjkChars = content.match(/[\u4e00-\u9fff]/g) ?? [];
+
+  return latinWords.length + cjkChars.length;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -185,6 +192,7 @@ function buildPostJsonLd({
     "@context": "https://schema.org",
     "@type": "Article",
     "@id": `${postUrl}#article`,
+    url: postUrl,
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": postUrl,
@@ -198,6 +206,20 @@ function buildPostJsonLd({
     inLanguage: locale,
     articleSection: post.categoryName,
     keywords: post.tags.map((tag) => tag.name),
+    wordCount: countWords(post.content),
+    isAccessibleForFree: true,
+    about: [
+      {
+        "@type": "Thing",
+        name: post.categoryName,
+        url: categoryUrl,
+      },
+      ...post.tags.map((tag) => ({
+        "@type": "Thing",
+        name: tag.name,
+        url: absoluteUrl(`/${locale}/tag/${tag.slug}`),
+      })),
+    ],
     author: {
       "@type": "Person",
       name: authorName,
@@ -519,9 +541,9 @@ export default async function PostPage({
                       categorySlug: item.category,
                       targetType: "sponsored",
                     })}
-                    className="overflow-hidden rounded-md border border-slate-200 bg-[rgb(249,251,250)]"
+                    className="group overflow-hidden rounded-lg border border-slate-200 bg-[rgb(249,251,250)] transition hover:border-emerald-300"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-emerald-50">
+                    <div className="relative aspect-[16/9] overflow-hidden bg-emerald-50">
                       <SafeImage
                         src={getRenderableImageSrc(item.image, {
                           title: item.title,
@@ -537,20 +559,20 @@ export default async function PostPage({
                           categorySlug: item.category,
                           variant: "compact",
                         })}
-                        alt=""
+                        alt={item.title}
                         fill
                         sizes="300px"
-                        className="object-cover"
+                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
                       />
                     </div>
-                    <div className="p-3">
+                    <div className="p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                         {item.sponsor}
                       </p>
-                      <h2 className="mt-2 text-sm font-semibold leading-snug text-slate-950">
+                      <h2 className="mt-2 line-clamp-2 text-sm font-semibold leading-snug text-slate-950">
                         {item.title}
                       </h2>
-                      <p className="mt-2 text-xs leading-6 text-slate-600">
+                      <p className="mt-2 line-clamp-3 text-xs leading-6 text-slate-600">
                         {item.description}
                       </p>
                     </div>

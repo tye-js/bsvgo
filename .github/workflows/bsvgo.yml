@@ -76,3 +76,10 @@ jobs:
             npm run build
             pm2 startOrReload ecosystem.config.cjs --update-env
             pm2 save
+            if ! curl --fail --max-time 15 --silent --show-error http://127.0.0.1:3000/en >/dev/null; then
+              echo "Deployment health check failed. PM2 status and recent logs follow."
+              pm2 status
+              pm2 logs bsvgo --lines 100 --nostream
+              exit 1
+            fi
+            pm2 status
