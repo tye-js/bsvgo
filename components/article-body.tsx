@@ -3,6 +3,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SafeImage } from "@/components/safe-image";
 import { createCoverArtDataUri, getRenderableImageSrc } from "@/lib/cover-art";
+import type { CategorySlug } from "@/lib/content";
 import { siteConfig } from "@/lib/i18n";
 
 export type ArticleTocItem = {
@@ -18,6 +19,78 @@ type ArticleLeadImage = {
 };
 
 const leadImageMarker = "bsvgo-lead-image";
+
+type ArticleTone = {
+  link: string;
+  h2Border: string;
+  h3Accent: string;
+  marker: string;
+  quote: string;
+  tableHead: string;
+  tableBorder: string;
+  tableRow: string;
+  tableStripe: string;
+  inlineCode: string;
+  hr: string;
+  imageBg: string;
+};
+
+const articleTones: Record<CategorySlug, ArticleTone> = {
+  blockchain: {
+    link: "text-emerald-700 decoration-emerald-200 hover:text-emerald-800 hover:decoration-emerald-400",
+    h2Border: "border-emerald-200",
+    h3Accent: "before:bg-emerald-400",
+    marker: "marker:text-emerald-500",
+    quote: "border-emerald-300 bg-emerald-50/80 text-emerald-950",
+    tableHead: "bg-emerald-50 text-emerald-900",
+    tableBorder: "border-emerald-100",
+    tableRow: "border-emerald-100",
+    tableStripe: "odd:bg-white even:bg-emerald-50/35",
+    inlineCode: "border-emerald-100 bg-emerald-50 text-emerald-950",
+    hr: "via-emerald-200",
+    imageBg: "bg-emerald-50",
+  },
+  ai: {
+    link: "text-cyan-700 decoration-cyan-200 hover:text-cyan-800 hover:decoration-cyan-400",
+    h2Border: "border-cyan-200",
+    h3Accent: "before:bg-cyan-400",
+    marker: "marker:text-cyan-500",
+    quote: "border-cyan-300 bg-cyan-50/80 text-cyan-950",
+    tableHead: "bg-cyan-50 text-cyan-950",
+    tableBorder: "border-cyan-100",
+    tableRow: "border-cyan-100",
+    tableStripe: "odd:bg-white even:bg-cyan-50/35",
+    inlineCode: "border-cyan-100 bg-cyan-50 text-cyan-950",
+    hr: "via-cyan-200",
+    imageBg: "bg-cyan-50",
+  },
+  infrastructure: {
+    link: "text-amber-700 decoration-amber-200 hover:text-amber-800 hover:decoration-amber-400",
+    h2Border: "border-amber-200",
+    h3Accent: "before:bg-amber-400",
+    marker: "marker:text-amber-500",
+    quote: "border-amber-300 bg-amber-50/80 text-amber-950",
+    tableHead: "bg-amber-50 text-amber-950",
+    tableBorder: "border-amber-100",
+    tableRow: "border-amber-100",
+    tableStripe: "odd:bg-white even:bg-amber-50/35",
+    inlineCode: "border-amber-100 bg-amber-50 text-amber-950",
+    hr: "via-amber-200",
+    imageBg: "bg-amber-50",
+  },
+};
+
+function getArticleTone(categorySlug?: string): ArticleTone {
+  if (
+    categorySlug === "blockchain" ||
+    categorySlug === "ai" ||
+    categorySlug === "infrastructure"
+  ) {
+    return articleTones[categorySlug];
+  }
+
+  return articleTones.blockchain;
+}
 
 function flattenText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -135,10 +208,18 @@ function isExternalHref(href: string | undefined) {
   }
 }
 
-function ArticleLeadFigure({ image }: { image: ArticleLeadImage }) {
+function ArticleLeadFigure({
+  image,
+  tone,
+}: {
+  image: ArticleLeadImage;
+  tone: ArticleTone;
+}) {
   return (
     <figure className="my-10">
-      <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-emerald-50 shadow-sm">
+      <div
+        className={`relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 ${tone.imageBg} shadow-sm`}
+      >
         <SafeImage
           src={image.src}
           fallbackSrc={image.fallbackSrc}
@@ -260,7 +341,10 @@ function prepareArticleContent(content: string, leadImage?: ArticleLeadImage) {
   );
 }
 
-function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
+function createMarkdownComponents(
+  leadImage: ArticleLeadImage | undefined,
+  tone: ArticleTone
+): Components {
   const headingCounts = new Map<string, number>();
 
   return {
@@ -278,7 +362,7 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     return (
       <h2
         id={id}
-        className="scroll-mt-28 mt-12 border-b border-emerald-900/10 pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]"
+        className={`scroll-mt-28 mt-12 border-b ${tone.h2Border} pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]`}
         {...props}
       >
         {children}
@@ -291,7 +375,7 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     return (
       <h3
         id={id}
-        className="scroll-mt-28 mt-10 text-xl font-semibold tracking-tight text-slate-950"
+        className={`relative scroll-mt-28 mt-10 pl-4 text-xl font-semibold tracking-tight text-slate-950 before:absolute before:left-0 before:top-2 before:h-5 before:w-1 before:rounded-full ${tone.h3Accent}`}
         {...props}
       >
         {children}
@@ -308,7 +392,7 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
   ),
   p: ({ children, ...props }) => (
     flattenText(children).trim() === `::${leadImageMarker}::` && leadImage ? (
-      <ArticleLeadFigure image={leadImage} />
+      <ArticleLeadFigure image={leadImage} tone={tone} />
     ) : (
       <p className="my-5 leading-8 text-slate-700" {...props}>
         {children}
@@ -320,7 +404,7 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
 
     return (
       <a
-        className="font-medium text-emerald-700 underline decoration-emerald-200 underline-offset-4 transition hover:text-emerald-800 hover:decoration-emerald-400"
+        className={`font-medium underline underline-offset-4 transition ${tone.link}`}
         href={href}
         rel={isExternal ? "noreferrer noopener" : undefined}
         target={isExternal ? "_blank" : undefined}
@@ -341,38 +425,40 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     </em>
   ),
   ul: ({ children, ...props }) => (
-    <ul className="my-6 list-disc space-y-2 pl-6 text-slate-700" {...props}>
+    <ul className={`my-6 list-disc space-y-2 pl-6 text-slate-700 ${tone.marker}`} {...props}>
       {children}
     </ul>
   ),
   ol: ({ children, ...props }) => (
-    <ol className="my-6 list-decimal space-y-2 pl-6 text-slate-700" {...props}>
+    <ol className={`my-6 list-decimal space-y-2 pl-6 text-slate-700 ${tone.marker}`} {...props}>
       {children}
     </ol>
   ),
   li: ({ children, ...props }) => (
-    <li className="pl-1 leading-8" {...props}>
+    <li className="pl-2 leading-8 marker:font-semibold" {...props}>
       {children}
     </li>
   ),
   blockquote: ({ children, ...props }) => (
     <blockquote
-      className="my-8 rounded-lg border border-emerald-900/10 bg-emerald-50/70 px-5 py-4 text-slate-700 shadow-sm sm:px-6"
+      className={`my-8 rounded-lg border-l-4 px-5 py-4 shadow-sm sm:px-6 ${tone.quote}`}
       {...props}
     >
-      <div className="text-[0.95rem] leading-8">{children}</div>
+      <div className="text-[0.96rem] font-medium leading-8 [&_p]:my-0">
+        {children}
+      </div>
     </blockquote>
   ),
   hr: ({ ...props }) => (
     <hr
-      className="my-10 border-0 bg-gradient-to-r from-transparent via-emerald-200 to-transparent"
+      className={`my-10 border-0 bg-gradient-to-r from-transparent ${tone.hr} to-transparent`}
       style={{ height: 1 }}
       {...props}
     />
   ),
   code: ({ children, className, ...props }) => (
     <code
-      className={`rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-900 ${className ?? ""}`}
+      className={`rounded-md px-1.5 py-0.5 font-mono text-[0.88em] ${tone.inlineCode} ${className ?? ""}`}
       {...props}
     >
       {children}
@@ -435,7 +521,9 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
 
     return (
       <figure className="my-8">
-        <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 bg-emerald-50 shadow-sm">
+        <div
+          className={`relative aspect-[16/9] overflow-hidden rounded-lg border border-slate-200 ${tone.imageBg} shadow-sm`}
+        >
           <SafeImage
             src={getRenderableImageSrc(typeof src === "string" ? src : null, {
               title: alt ?? "BSVgo",
@@ -458,25 +546,33 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
     );
   },
   table: ({ children, ...props }) => (
-    <div className="my-8 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table className="w-full border-collapse text-left text-sm text-slate-700" {...props}>
+    <div
+      className={`my-8 overflow-x-auto rounded-lg border ${tone.tableBorder} bg-white shadow-sm`}
+    >
+      <table className="min-w-[680px] w-full border-collapse text-left text-sm text-slate-700" {...props}>
         {children}
       </table>
     </div>
   ),
   thead: ({ children, ...props }) => (
-    <thead className="bg-slate-50 text-xs uppercase tracking-[0.14em] text-slate-500" {...props}>
+    <thead
+      className={`sticky top-0 z-10 text-xs uppercase tracking-[0.14em] ${tone.tableHead}`}
+      {...props}
+    >
       {children}
     </thead>
   ),
   tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
   tr: ({ children, ...props }) => (
-    <tr className="border-b border-slate-200 last:border-0" {...props}>
+    <tr
+      className={`border-b ${tone.tableRow} ${tone.tableStripe} last:border-0`}
+      {...props}
+    >
       {children}
     </tr>
   ),
   th: ({ children, ...props }) => (
-    <th className="px-4 py-3 font-semibold text-slate-600" {...props}>
+    <th className="whitespace-nowrap px-4 py-3 font-semibold" {...props}>
       {children}
     </th>
   ),
@@ -491,16 +587,19 @@ function createMarkdownComponents(leadImage?: ArticleLeadImage): Components {
 export function ArticleBody({
   content,
   leadImage,
+  categorySlug,
 }: {
   content: string;
   leadImage?: ArticleLeadImage;
+  categorySlug?: string;
 }) {
   const preparedContent = prepareArticleContent(content, leadImage);
+  const tone = getArticleTone(categorySlug);
 
   return (
-    <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-a:text-emerald-700 prose-img:rounded-lg prose-img:shadow-sm">
+    <div className="mx-auto max-w-[72ch] text-[17px] leading-8 text-slate-700 prose prose-slate prose-lg prose-headings:tracking-tight prose-headings:text-slate-950 prose-p:leading-8 prose-img:rounded-lg prose-img:shadow-sm">
       <ReactMarkdown
-        components={createMarkdownComponents(leadImage)}
+        components={createMarkdownComponents(leadImage, tone)}
         remarkPlugins={[remarkGfm]}
       >
         {preparedContent}

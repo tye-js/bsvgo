@@ -7,6 +7,7 @@ import {
   getArticleToc,
   type ArticleTocItem,
 } from "@/components/article-body";
+import { ArticleShareActions } from "@/components/article-share-actions";
 import { ReadingProgress } from "@/components/reading-progress";
 import { SafeImage } from "@/components/safe-image";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
@@ -293,6 +294,7 @@ export default async function PostPage({
   const jsonLd = buildPostJsonLd({ locale, post });
   const toc = getArticleToc(post.content);
   const tocTitle = locale === "zh" ? "目录" : "Contents";
+  const postUrl = absoluteUrl(`/${locale}/posts/${post.slug}`);
 
   return (
     <main className="bg-[rgb(249,251,250)]">
@@ -325,7 +327,7 @@ export default async function PostPage({
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-4 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+              <div className="flex flex-col gap-5 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
                   {authorName || authorAvatar ? (
                     <div className="flex items-center gap-3">
@@ -370,23 +372,33 @@ export default async function PostPage({
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(post.tags ?? []).map((tag) => (
-                    <Link
-                      key={tag.slug}
-                      href={`/${locale}/tag/${tag.slug}`}
-                      {...buildAnalyticsAttrs({
-                        eventName: "tag_click",
-                        label: tag.name,
-                        href: `/${locale}/tag/${tag.slug}`,
-                        tagSlug: tag.slug,
-                        targetType: "tag",
-                      })}
-                      className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
-                    >
-                      {tag.name}
-                    </Link>
-                  ))}
+                <div className="flex flex-col gap-3 sm:items-start lg:items-end">
+                  <ArticleShareActions
+                    locale={locale}
+                    title={post.title}
+                    description={post.seoDescription || post.excerpt}
+                    url={postUrl}
+                    articleSlug={post.slug}
+                    categorySlug={post.categorySlug}
+                  />
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    {(post.tags ?? []).map((tag) => (
+                      <Link
+                        key={tag.slug}
+                        href={`/${locale}/tag/${tag.slug}`}
+                        {...buildAnalyticsAttrs({
+                          eventName: "tag_click",
+                          label: tag.name,
+                          href: `/${locale}/tag/${tag.slug}`,
+                          tagSlug: tag.slug,
+                          targetType: "tag",
+                        })}
+                        className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        {tag.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
             </header>
@@ -398,6 +410,7 @@ export default async function PostPage({
             >
               <ArticleBody
                 content={post.content}
+                categorySlug={post.categorySlug}
                 leadImage={{
                   src: getRenderableImageSrc(post.coverImage, {
                     title: post.title,
