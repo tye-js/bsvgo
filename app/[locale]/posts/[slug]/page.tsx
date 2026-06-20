@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Clock3 } from "lucide-react";
 import { ArticleBody, getArticleToc } from "@/components/article-body";
 import { ArticleShareActions } from "@/components/article-share-actions";
 import { ArticleTocNav } from "@/components/article-toc-nav";
@@ -272,8 +272,8 @@ export default async function PostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mx-auto max-w-[88rem] px-5 py-6 lg:py-10">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)_300px]">
+      <div className="mx-auto max-w-[88rem] px-5 py-5 lg:py-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)_300px]">
           <aside className="hidden xl:sticky xl:top-24 xl:block">
             <ArticleTocNav items={toc} title={tocTitle} />
           </aside>
@@ -282,25 +282,46 @@ export default async function PostPage({
             className="min-w-0"
             {...buildSectionViewAttrs(`article-${slug}`)}
           >
-            <header className="overflow-hidden rounded-lg border border-emerald-900/10 bg-white shadow-sm">
-              <div className="bg-[linear-gradient(135deg,rgba(236,253,245,0.95),rgba(250,252,255,0.98))] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12">
-                <div className="max-w-3xl">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
+            <header className="rounded-lg border border-emerald-900/10 bg-white px-5 py-6 shadow-sm sm:px-7 lg:px-9 lg:py-7">
+              <div className="max-w-4xl">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link
+                    href={`/${locale}/category/${post.categorySlug}`}
+                    {...buildAnalyticsAttrs({
+                      eventName: "category_click",
+                      label: post.categoryName,
+                      href: `/${locale}/category/${post.categorySlug}`,
+                      categorySlug: post.categorySlug,
+                      targetType: "category",
+                    })}
+                    className="rounded-md bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                  >
                     {post.categoryName}
-                  </p>
-                  <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl md:text-5xl">
-                    {post.title}
-                  </h1>
-                  <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-                    {post.excerpt}
-                  </p>
+                  </Link>
+                  <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
+                  <span className="inline-flex items-center gap-1.5">
+                    <CalendarDays className="h-4 w-4 text-emerald-700" />
+                    {formatDate(post.publishedAt, locale)}
+                  </span>
+                  <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock3 className="h-4 w-4 text-emerald-700" />
+                    {post.readingMinutes} {copy.readingTime}
+                  </span>
                 </div>
+                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-[2.35rem] lg:text-[2.7rem]">
+                  {post.title}
+                </h1>
+                <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+                  {post.excerpt}
+                </p>
               </div>
-              <div className="flex flex-col gap-5 border-t border-emerald-900/10 bg-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+
+              <div className="mt-5 flex flex-col gap-4 border-t border-emerald-900/10 pt-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-3">
                   {authorName || authorAvatar ? (
                     <div className="flex items-center gap-3">
-                      <div className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-emerald-900/10 bg-emerald-50 text-sm font-semibold text-emerald-700">
+                      <div className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-emerald-900/10 bg-emerald-50 text-xs font-semibold text-emerald-700">
                         {authorAvatar ? (
                           <SafeImage
                             src={authorAvatar}
@@ -325,31 +346,13 @@ export default async function PostPage({
                           </p>
                         ) : null}
                         {authorRole ? (
-                          <p className="truncate text-xs font-medium uppercase tracking-[0.16em] text-emerald-700">
+                          <p className="truncate text-xs font-medium text-emerald-700">
                             {authorRole}
                           </p>
                         ) : null}
                       </div>
                     </div>
                   ) : null}
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                    <span>
-                      {copy.publishedOn} {formatDate(post.publishedAt, locale)}
-                    </span>
-                    <span>
-                      {post.readingMinutes} {copy.readingTime}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 sm:items-start lg:items-end">
-                  <ArticleShareActions
-                    locale={locale}
-                    title={post.title}
-                    description={post.seoDescription || post.excerpt}
-                    url={postUrl}
-                    articleSlug={post.slug}
-                    categorySlug={post.categorySlug}
-                  />
                   <div className="flex flex-wrap gap-2 lg:justify-end">
                     {(post.tags ?? []).map((tag) => (
                       <Link
@@ -369,11 +372,19 @@ export default async function PostPage({
                     ))}
                   </div>
                 </div>
+                <ArticleShareActions
+                  locale={locale}
+                  title={post.title}
+                  description={post.seoDescription || post.excerpt}
+                  url={postUrl}
+                  articleSlug={post.slug}
+                  categorySlug={post.categorySlug}
+                />
               </div>
             </header>
 
             <div
-              className="mt-8 rounded-lg border border-emerald-900/10 bg-white px-5 py-10 shadow-sm sm:px-7 lg:px-10"
+              className="mt-5 rounded-lg border border-emerald-900/10 bg-white px-5 py-8 sm:px-7 lg:px-9"
               data-article-body
               {...buildSectionViewAttrs(`article-body-${slug}`)}
             >

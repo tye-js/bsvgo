@@ -421,6 +421,26 @@ function mapPostRows(rows: RawPostRow[]) {
   return rows.map(mapPostRow);
 }
 
+function mapUniquePostRows(rows: RawPostRow[], limit?: number) {
+  const seenSlugs = new Set<string>();
+  const posts: LocalizedPost[] = [];
+
+  for (const row of rows) {
+    if (seenSlugs.has(row.slug)) {
+      continue;
+    }
+
+    seenSlugs.add(row.slug);
+    posts.push(mapPostRow(row));
+
+    if (limit && posts.length >= limit) {
+      break;
+    }
+  }
+
+  return posts;
+}
+
 function mapCollectionRow(row: RawCollectionRow): LocalizedCollection {
   const fallbackCoverImage = normalizeCoverImage(
     row.fallbackCoverImage,
@@ -1161,17 +1181,18 @@ export const getFeaturedPost = cache(async (locale: Locale) => {
 export const getSponsoredPosts = cache(
   async (locale: Locale, limit = 5): Promise<LocalizedPost[]> => {
     try {
-      return mapPostRows(
+      return mapUniquePostRows(
         await queryPlacementWithLegacy(
           locale,
           {
             scope: "home",
             slot: "promoted",
-            limit,
+            limit: limit * 2,
           },
-          { mark: "sponsored", limit },
+          { mark: "sponsored", limit: limit * 2 },
           `home-promoted:${locale}`
-        )
+        ),
+        limit
       );
     } catch (error) {
       logDatabaseFallback(`home-promoted:${locale}`, error);
@@ -1220,22 +1241,23 @@ export const getCategoryPromotedPosts = cache(
     limit = 5
   ): Promise<LocalizedPost[]> => {
     try {
-      return mapPostRows(
+      return mapUniquePostRows(
         await queryPlacementWithLegacy(
           locale,
           {
             scope: "category",
             slot: "promoted",
             categorySlug,
-            limit,
+            limit: limit * 2,
           },
           {
             categorySlug,
             mark: "sponsored",
-            limit,
+            limit: limit * 2,
           },
           `category-promoted:${locale}:${categorySlug}`
-        )
+        ),
+        limit
       );
     } catch (error) {
       logDatabaseFallback(`category-promoted:${locale}:${categorySlug}`, error);
