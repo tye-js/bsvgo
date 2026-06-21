@@ -412,54 +412,56 @@ export default async function PostPage({
               />
             ) : null}
 
-            <nav className="mt-8 grid gap-4 md:grid-cols-2">
-              {post.previous ? (
-                <Link
-                  href={`/${locale}/posts/${post.previous.slug}`}
-                  {...buildAnalyticsAttrs({
-                    eventName: "article_click",
-                    label: post.previous.title,
-                    href: `/${locale}/posts/${post.previous.slug}`,
-                    articleSlug: post.previous.slug,
-                    categorySlug: post.previous.categorySlug,
-                    targetType: "article",
-                  })}
-                  className="rounded-lg border border-teal-900/10 bg-white p-5 transition hover:border-emerald-300"
-                >
-                  <span className="flex items-center text-sm text-slate-500">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {copy.previousPost}
-                  </span>
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {post.previous.title}
-                  </p>
-                </Link>
-              ) : (
-                <div />
-              )}
-              {post.next ? (
-                <Link
-                  href={`/${locale}/posts/${post.next.slug}`}
-                  {...buildAnalyticsAttrs({
-                    eventName: "article_click",
-                    label: post.next.title,
-                    href: `/${locale}/posts/${post.next.slug}`,
-                    articleSlug: post.next.slug,
-                    categorySlug: post.next.categorySlug,
-                    targetType: "article",
-                  })}
-                  className="rounded-lg border border-teal-900/10 bg-white p-5 text-right transition hover:border-emerald-300"
-                >
-                  <span className="flex items-center justify-end text-sm text-slate-500">
-                    {copy.nextPost}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </span>
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {post.next.title}
-                  </p>
-                </Link>
-              ) : null}
-            </nav>
+            {postCollections.length === 0 ? (
+              <nav className="mt-8 grid gap-4 md:grid-cols-2">
+                {post.previous ? (
+                  <Link
+                    href={`/${locale}/posts/${post.previous.slug}`}
+                    {...buildAnalyticsAttrs({
+                      eventName: "article_click",
+                      label: post.previous.title,
+                      href: `/${locale}/posts/${post.previous.slug}`,
+                      articleSlug: post.previous.slug,
+                      categorySlug: post.previous.categorySlug,
+                      targetType: "article",
+                    })}
+                    className="rounded-lg border border-teal-900/10 bg-white p-5 transition hover:border-emerald-300"
+                  >
+                    <span className="flex items-center text-sm text-slate-500">
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      {copy.previousPost}
+                    </span>
+                    <p className="mt-3 font-semibold text-slate-950">
+                      {post.previous.title}
+                    </p>
+                  </Link>
+                ) : (
+                  <div />
+                )}
+                {post.next ? (
+                  <Link
+                    href={`/${locale}/posts/${post.next.slug}`}
+                    {...buildAnalyticsAttrs({
+                      eventName: "article_click",
+                      label: post.next.title,
+                      href: `/${locale}/posts/${post.next.slug}`,
+                      articleSlug: post.next.slug,
+                      categorySlug: post.next.categorySlug,
+                      targetType: "article",
+                    })}
+                    className="rounded-lg border border-teal-900/10 bg-white p-5 text-right transition hover:border-emerald-300"
+                  >
+                    <span className="flex items-center justify-end text-sm text-slate-500">
+                      {copy.nextPost}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </span>
+                    <p className="mt-3 font-semibold text-slate-950">
+                      {post.next.title}
+                    </p>
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
 
             {relatedPosts.length > 0 ? (
               <section className="mt-8 rounded-lg border border-teal-900/10 bg-white px-5 py-8 shadow-sm sm:px-7">
