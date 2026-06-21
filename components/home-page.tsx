@@ -15,9 +15,11 @@ import { SectionHeader } from "@/components/section-header";
 import { SafeImage } from "@/components/safe-image";
 import {
   getFeaturedPost,
+  getLatestPosts,
   getLocalizedCollections,
   getLocalizedCategories,
-  getLocalizedPosts,
+  getLocalizedTags,
+  getLocalizedPostsByCategorySlug,
   getSponsoredPosts,
 } from "@/lib/blog";
 import { buildAnalyticsAttrs, buildSectionViewAttrs } from "@/lib/analytics";
@@ -64,16 +66,31 @@ const defaultTopicStyle = topicStyles.infrastructure;
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const copy = uiCopy[locale];
-  const [categories, posts, homeFeaturedPost, sponsoredPosts, collections] = await Promise.all([
+  const [
+    categories,
+    latestPosts,
+    homeFeaturedPost,
+    sponsoredPosts,
+    collections,
+    tags,
+  ] = await Promise.all([
     getLocalizedCategories(locale),
-    getLocalizedPosts(locale),
+    getLatestPosts(locale, 5),
     getFeaturedPost(locale),
     getSponsoredPosts(locale, 5),
     getLocalizedCollections(locale, 3),
+    getLocalizedTags(locale, 8),
   ]);
+  const categoryPostEntries = await Promise.all(
+    categories.map(async (category) => [
+      category.slug,
+      await getLocalizedPostsByCategorySlug(locale, category.slug, 5),
+    ] as const)
+  );
+  const postsByCategory = new Map(categoryPostEntries);
+  const visibleTags = tags;
 
-  const featured = homeFeaturedPost ?? posts[0] ?? null;
-  const latestPosts = posts.slice(0, 5);
+  const featured = homeFeaturedPost ?? latestPosts[0] ?? null;
   const featuredImageFallback = featured
     ? createCoverArtDataUri({
         title: featured.title,
@@ -278,9 +295,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
       </ArticleSection>
 
       {categories.map((category) => {
-        const categoryPosts = posts
-          .filter((post) => post.categorySlug === category.slug)
-          .slice(0, 5);
+        const categoryPosts = postsByCategory.get(category.slug) ?? [];
 
         if (categoryPosts.length === 0) {
           return null;
@@ -354,22 +369,14 @@ export async function HomePage({ locale }: { locale: Locale }) {
           </InfoPanel>
           <InfoPanel eyebrow="Tags">
             <div className="flex flex-wrap gap-2 text-sm">
-              {[
-                ...new Map(
-                  posts
-                    .flatMap((post) => post.tags)
-                    .map((tag) => [tag.slug, tag])
-                ).values(),
-              ]
-                .slice(0, 8)
-                .map((tag) => (
-                  <span
-                    key={tag.slug}
-                    className="rounded-md bg-emerald-50 px-3 py-1.5 text-emerald-700"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
+              {visibleTags.map((tag) => (
+                <span
+                  key={tag.slug}
+                  className="rounded-md bg-emerald-50 px-3 py-1.5 text-emerald-700"
+                >
+                  {tag.name}
+                </span>
+              ))}
             </div>
           </InfoPanel>
           <InfoPanel eyebrow="Updates">

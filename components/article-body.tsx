@@ -24,6 +24,7 @@ const leadImageMarker = "bsvgo-lead-image";
 type ArticleTone = {
   link: string;
   h2Border: string;
+  h2Decor: string;
   h3Accent: string;
   marker: string;
   quote: string;
@@ -40,6 +41,7 @@ const articleTones: Record<CategorySlug, ArticleTone> = {
   blockchain: {
     link: "text-emerald-700 decoration-emerald-200 hover:text-emerald-800 hover:decoration-emerald-400",
     h2Border: "border-emerald-200",
+    h2Decor: "relative pl-5 before:absolute before:left-0 before:top-[0.34em] before:h-8 before:w-1.5 before:rounded-full before:bg-emerald-400 after:absolute after:bottom-[-1px] after:left-5 after:h-px after:w-28 after:bg-gradient-to-r after:from-emerald-400 after:to-transparent",
     h3Accent: "before:bg-emerald-400",
     marker: "marker:text-emerald-500",
     quote: "border-emerald-300 bg-emerald-50/80 text-emerald-950",
@@ -54,6 +56,7 @@ const articleTones: Record<CategorySlug, ArticleTone> = {
   ai: {
     link: "text-cyan-700 decoration-cyan-200 hover:text-cyan-800 hover:decoration-cyan-400",
     h2Border: "border-cyan-200",
+    h2Decor: "",
     h3Accent: "before:bg-cyan-400",
     marker: "marker:text-cyan-500",
     quote: "border-cyan-300 bg-cyan-50/80 text-cyan-950",
@@ -68,6 +71,7 @@ const articleTones: Record<CategorySlug, ArticleTone> = {
   infrastructure: {
     link: "text-amber-700 decoration-amber-200 hover:text-amber-800 hover:decoration-amber-400",
     h2Border: "border-amber-200",
+    h2Decor: "",
     h3Accent: "before:bg-amber-400",
     marker: "marker:text-amber-500",
     quote: "border-amber-300 bg-amber-50/80 text-amber-950",
@@ -363,7 +367,7 @@ function createMarkdownComponents(
     return (
       <h2
         id={id}
-        className={`scroll-mt-28 mt-12 border-b ${tone.h2Border} pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]`}
+        className={`scroll-mt-28 mt-12 border-b ${tone.h2Border} ${tone.h2Decor} pb-3 text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 sm:text-[1.65rem]`}
         {...props}
       >
         {children}

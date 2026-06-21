@@ -757,10 +757,10 @@ async function queryPlacedPosts(locale: Locale, options: PlacementQueryOptions) 
   return query;
 }
 
-async function queryTags(locale: Locale) {
+async function queryTags(locale: Locale, limit?: number) {
   const { readonlyDb } = await import("@/db");
 
-  return readonlyDb
+  const query = readonlyDb
     .select({
       slug: tagTable.slug,
       name: tagTable.name,
@@ -772,7 +772,14 @@ async function queryTags(locale: Locale) {
     .innerJoin(postTranslations, eq(postTranslations.postId, postTable.id))
     .where(and(...publishedPostConditions(locale)))
     .groupBy(tagTable.id, tagTable.slug, tagTable.name)
-    .orderBy(asc(tagTable.name));
+    .orderBy(asc(tagTable.name))
+    .$dynamic();
+
+  if (limit) {
+    return query.limit(limit);
+  }
+
+  return query;
 }
 
 async function queryCollectionPosts(locale: Locale, collectionSlug: string) {
@@ -990,6 +997,17 @@ export const getLocalizedPosts = cache(
   }
 );
 
+export const getLatestPosts = cache(
+  async (locale: Locale, limit = 5): Promise<LocalizedPost[]> => {
+    try {
+      return mapPostRows(await queryPosts(locale, { limit }));
+    } catch (error) {
+      logDatabaseFallback(`latest-posts:${locale}`, error);
+      return getFallbackPosts(locale).slice(0, limit);
+    }
+  }
+);
+
 export const getLocalizedCollections = cache(
   async (locale: Locale, limit?: number): Promise<LocalizedCollection[]> => {
     try {
@@ -1070,25 +1088,37 @@ export const getLocalizedPostBySlug = cache(
 );
 
 export const getLocalizedPostsByCategorySlug = cache(
-  async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
+  async (
+    locale: Locale,
+    slug: string,
+    limit?: number
+  ): Promise<LocalizedPost[]> => {
     try {
-      return mapPostRows(await queryPosts(locale, { categorySlug: slug }));
+      return mapPostRows(await queryPosts(locale, { categorySlug: slug, limit }));
     } catch (error) {
       logDatabaseFallback(`category-posts:${locale}:${slug}`, error);
-      return getFallbackPosts(locale).filter((post) => post.categorySlug === slug);
+      const posts = getFallbackPosts(locale).filter(
+        (post) => post.categorySlug === slug
+      );
+      return limit ? posts.slice(0, limit) : posts;
     }
   }
 );
 
 export const getLocalizedPostsByTagSlug = cache(
-  async (locale: Locale, slug: string): Promise<LocalizedPost[]> => {
+  async (
+    locale: Locale,
+    slug: string,
+    limit?: number
+  ): Promise<LocalizedPost[]> => {
     try {
-      return mapPostRows(await queryPosts(locale, { tagSlug: slug }));
+      return mapPostRows(await queryPosts(locale, { tagSlug: slug, limit }));
     } catch (error) {
       logDatabaseFallback(`tag-posts:${locale}:${slug}`, error);
-      return getFallbackPosts(locale).filter((post) =>
+      const posts = getFallbackPosts(locale).filter((post) =>
         post.tags.some((tag) => tag.slug === slug)
       );
+      return limit ? posts.slice(0, limit) : posts;
     }
   }
 );
@@ -1272,12 +1302,13 @@ export const getCategoryPromotedPosts = cache(
 );
 
 export const getLocalizedTags = cache(
-  async (locale: Locale): Promise<LocalizedTag[]> => {
+  async (locale: Locale, limit?: number): Promise<LocalizedTag[]> => {
     try {
-      return await queryTags(locale);
+      return await queryTags(locale, limit);
     } catch (error) {
       logDatabaseFallback(`tags:${locale}`, error);
-      return getFallbackTags(locale);
+      const tags = getFallbackTags(locale);
+      return limit ? tags.slice(0, limit) : tags;
     }
   }
 );
